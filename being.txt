@@ -1,0 +1,16 @@
+@ cim zacat
+background - green grass
+thing - circle, color, name, position, direction, box2d, radius
+input - moving locked thing
+camera - locking, mouse movement
+everything should be encapsulated in kind of modular way for simplicity
+tree - static green thing
+animal - simple random movement ai, health (later view-angle)
+human - hunger, health (somehow show it in gui), inventory
+meat - what goes out of animal
+rock - lays around on ground, nonphysic, throwable, does damage
+things should have their definitions (with universal object generator)
+ability to play with as any object
+	human - movement, take/drop, throw, eat
+	animal - movement, health, survival
+	rock - do nothing, but camera follows it, and it may has some stats
