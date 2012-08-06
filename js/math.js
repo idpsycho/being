@@ -16,6 +16,26 @@ function calcDeltaTime()
 
 	return dt;
 }
+var lastAvgFps = 60;
+var sumFps = 0;
+var sumsFps = 0;
+function calcAvgFps(dt)
+{
+	var fps = calcFpsFromDt(dt);
+	sumFps += fps;
+	sumsFps++;
+
+	if (sumsFps > 10)
+		lastAvgFps = to_i( sumFps/sumsFps );
+
+	return lastAvgFps;
+}
+function calcFpsFromDt(dt)
+{
+	if (!dt) dt = 1000;
+	var fps = 1000/dt;
+	return to_i(fps);
+}
 // TODO
 // - get fps
 // - and get fps average few times per second to avoid unreadable numbers

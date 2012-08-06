@@ -8,76 +8,79 @@ require([
 	'js/js-extension',
 	'js/ivank-extension',
 	'js/math',
+	'js/input',
 	'js/camera',
 	'js/things',
 
-], setupBeing);
+], initBeing);
 
 /////////////////////////////////////////
 // tu by mala byt len najsamzakladnejsia logika, prip. docasne veci co su vo vyvoji
 
-var cam;
+// nie ze by to malo byt global, ale nechcem mat vsetko v Engine.Factory.*
+var cam;	// from camera.js
 var stage;
+var bg;
 var dbg;
-
-var
-	b2Vec2			= Box2D.Common.Math.b2Vec2,
-	b2BodyDef		= Box2D.Dynamics.b2BodyDef,
-	b2Body			= Box2D.Dynamics.b2Body,
-	b2FixtureDef	= Box2D.Dynamics.b2FixtureDef,
-	b2World			= Box2D.Dynamics.b2World,
-	b2PolygonShape	= Box2D.Collision.Shapes.b2PolygonShape;
-	b2CircleShape	= Box2D.Collision.Shapes.b2CircleShape;
+var box2d;
+var arrThings = [];
+var dt;
 
 
-function createBox2dCircle(radius, density)
+
+function updateThings()
 {
-	var bodyDef = new b2BodyDef();
-	bodyDef.type = b2Body.b2_dynamicBody;
-	bodyDef.position.Set(0.0, 4.0);
+	for (var i=0; i < arrThings.length; i++)
+	{
+		var a = arrThings[i];
+		a.update();
 
-	var circle = new b2CircleShape();
-	circle.m_p.Set(2.0f, 3.0f);
-	circle.m_radius = 0.5f;
-
-	var fixDef = new b2FixtureDef();
-	fixDef.density = 1.0;
-	fixDef.shape = circle;
-
-	var body = box2d.CreateBody(bodyDef);
-	body.CreateFixture(fixDef);
-
-	return body;
+		dbg.drawLine(0, 0, a.pos.x, a.pos.y)
+	}
 }
 
-function setupBeing()
+function addThing(name, x, y)
 {
-	setupIvank();
+	var t = genThing(name, x, y);
+	if (!t) return;
 
-	cam = new Camera();
+	t.setStage(stage);
+	arrThings.push(t);
+}
+
+function initBeing()
+{
+	initIvank();
+
+	cam = getCamera();
+	onRESIZE();	// it has init stuff in it
 
 	bindOnMouseWheel(function(d) {
 		var fZoom = 1.15;
 		cam.zoomIn(d ? fZoom : 1/fZoom);
 	});
 
-	// box2d
-	box2d = new b2World();
-	if ('tmp')
-	{
-		var body = createBox2dCircle(0.5, 1);
-
-		// get physic props
-		var position = body.GetPosition();
-		var angle = body.GetAngle()*inDegs;
-	}
+	initBox2d();
 
 	//loadWorld('human and animal');
-	addThing('human');
-	addThing('animal');
+	//addThing('human');
+	//addThing('animal');
+
+	inputSetFnAfterMM(afterMouseMove);
 }
 
-function setupIvank()
+function afterMouseMove()
+{
+	if (kd('SPACE'))
+		cam.move( v2m(mousePosChange, -cam.zoom*0.5) );
+}
+
+function initBox2d()
+{
+	box2d = new Box2D.Dynamics.b2World();
+}
+
+function initIvank()
 {
 	// stage
 	stage = new Stage('c');
@@ -85,49 +88,79 @@ function setupIvank()
 
 	dbg = new DebugLayer(stage);
 
+	bg = new Sprite();
+	bg.graphics.beginFill(0x6dae42);
+	var w = stage.stageWidth;
+	var h = stage.stageHeight;
+	bg.graphics.drawRect(-w/2, -h/2, w, h);
+	stage.addChild(bg);
+
 	stage.addEventListener(Event.RESIZE, onRESIZE);
-	stage.addEventListener(Event.ENTER_FRAME, onEF);
+	stage.addEventListener(Event.ENTER_FRAME, onEnterFrame);
 
 	// input stuff sa spracovava v inpute, a potom uz sa komunikuje s tym
-	stage.addEventListener(KeyboardEvent.KEY_DOWN, onKD);
-	stage.addEventListener(KeyboardEvent.KEY_UP  , onKU);
+	stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
+	stage.addEventListener(KeyboardEvent.KEY_UP  , onKeyUp);
 	stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
-	stage.addEventListener(MouseEvent.MOUSE_DOWN, onMD);
-	stage.addEventListener(MouseEvent.MOUSE_UP, onMU);
+	stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
+	stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
 }
 
-function onEF()
+function onEnterFrame()
 {
 	dt = calcDeltaTime();
 
-	dbg.afterFrame();
+	dbg.onFrame();
 	drawNewDebugTexts();
 
 	processInputs();
 	processMouse();
 
 	// timeStep, velocityIterations, positionIterations
-	box2d.Step(1/60, 6, 2);
+	if (box2d) box2d.Step(1/60, 6, 2);
 
-	cam.afterFrame();
+	updateThings();
+
+	cam.updateStage(stage);
 	inputAfterFrame();
 }
 
+function out()
+{
+	var s = '';
+	for (var i=0; i < arguments.length; i++)
+	{
+		var a = arguments[i];
+
+		s += nice(a)+' ';
+	}
+	console.log(s);
+}
 
 function drawNewDebugTexts()
 {
 	// draw fps into corner
+	var fps = calcAvgFps(dt);
+	dbg.drawText(fps, 0, 0);
+
+	out('pos', mousePos.x, mousePos.y);
+	out('diff', mousePosChange.x, mousePosChange.y);
+
+	// dbg.drawText(mousePosChange.x+' '+mousePosChange.y, 50, 50);
+	// dbg.drawText(cam.zoom, -50, 50);
 }
 
 function onRESIZE()
 {
-
+	var w = stage.stageWidth;
+	var h = stage.stageHeight;
+	cam.onRESIZE(w, h);
 }
 
 function processInputs()
 {
 	/*
-		var w = stage.stageWidth;
+	var w = stage.stageWidth;
 	var h = stage.stageHeight;
 
 	var fZoom = 1.05;
@@ -143,28 +176,9 @@ function processInputs()
 		setCamPosition(p.x, p.y);
 	}
 
-	if (pressed('P')) add_('player');
-
-	if (kkd('W')) add_('water');
-	if (kkd('O')) add_('oil');
-	if (kkd('H')) add_('honey');
-	if (kkd('Q')) add_('snow');
-	if (kkd('A')) add_('air');
-
-	if (kkd('T')) add_('tree');
-	if (kkd('G')) add_('grass');
-	if (kkd('L')) add_('leafs');
-	if (kkd('V')) add_('lava');
-
-	if (kkd('D')) add_('dirt');
-	if (kkd('R')) add_('rocks');
-	if (kkd('S')) add_('sand');
-	if (kkd('I')) add_('iron');
-
-		if (kd['NUM0']) g_timeMult = 0;
-	if (kd['NUM1']) g_timeMult = 0.005;
-	if (kd['NUM2']) g_timeMult = 0.02;
-	if (kd['NUM3']) g_timeMult = 0.05;
-
 	*/
+}
+function processMouse()
+{
+
 }

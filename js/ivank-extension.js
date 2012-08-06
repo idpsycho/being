@@ -1,4 +1,7 @@
-require(['math.js']);
+require([
+	'js/math',
+	'js/js-extension'
+]);
 
 // dbg = new DebugLayer(stage);
 // dbg.afterFrame();
@@ -13,52 +16,49 @@ function DebugLayer(stage)
 	dbg = dbgStage.graphics;
 
 
-	t.afterFrame = function()
+	t.onFrame = function()
 	{
 		removeDebugGraphics();
 
 		// also, keep them on top of stage
-		stage.removeChild(dbgs);	// on top
-		stage.addChild(dbgs);
+		stage.removeChild(dbgStage);	// on top
+		stage.addChild(dbgStage);
 	}
 
 	function removeDebugGraphics()
 	{
 		if (dbg) dbg.clear();					// lines, circles
-		while (dbgs.children.length)	// texts
-			dbgs.removeChildAt(0);
+		while (dbgStage.children.length)	// texts
+			dbgStage.removeChildAt(0);
 	}
 
-
-	///////////////////////////////////
-	// debug drawing tools
-	/*
-	function drawText(x, y, s, clr, nice_number)
+	t.drawLine = function(x, y, x2, y2, clr, w) // We Have to Draw the Line Somewhere
 	{
-		if (typeof x.x != 'undefined')
-		{
-			nice_number=clr;
-			clr=s;
-			s=y;
-			y=x.y;
-			x=x.x;
-		}
+		if (!w) w = 1;
+		clr = normalizeClr(clr);
 
-		nice_number = 1; // tmp
-		if (nice_number && typeof s == 'number')
-			s = nice(s);
+		dbg.lineStyle(w, clr);
+		dbg.moveTo(x, y);
+		dbg.lineTo(x2, y2);
+	}
 
+	t.drawText = function(s, x, y, clr)
+	{
 		var fontSize = 20;
 
 		var t = new TextField();
 		clr = normalizeClr(clr);
 		t.setTextFormat( new TextFormat("Arial", fontSize, clr) );
-		dbgs.addChild(t);
+		dbgStage.addChild(t);
 
 		t.setText(s);
 		t.x = x;
 		t.y = y;
 	}
+
+	///////////////////////////////////
+	// debug drawing tools
+	/*
 
 	function drawCircleO(x, y, r, clr, w, parts)
 	{
@@ -184,33 +184,6 @@ function DebugLayer(stage)
 		}
 
 		_drawLine(ax, ay, bx, by, c, w);
-	}
-
-	function _drawLine(x, y, x2, y2, clr, w)
-	{
-		if (!w) w = 1;
-		clr = normalizeClr(clr);
-
-		dbg.lineStyle(w, clr);
-		dbg.moveTo(x, y);
-		dbg.lineTo(x2, y2);
-
-		return;	// new ivank has working width
-
-		// fix, kedze to nejde..
-		if (w > 1)
-		{
-			var a = v2(x, y);
-			var b = v2(x2, y2);
-			var n = v2dirTo(a, b);
-			for (var i=1; i < w/2+1; i++)
-			{
-				var dx = -n.y * i;
-				var dy = n.x * i;
-				drawLine(x+dx, y+dy, x2+dx, y2+dy, clr);
-				drawLine(x+dx, y-dy, x2+dx, y2-dy, clr);
-			}
-		}
 	}
 
 	function drawRectAB(x, y, bx, by, clr, alpha)

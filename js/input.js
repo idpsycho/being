@@ -1,147 +1,155 @@
-require(['math'], setupInput);
+require([
+	'js/math',
+	'js/camera'
+], initInput);
 
-var mousePos, mousePosLast;
-var mouseScr, mouseScrLast;
+var mousePos, mousePosLast, mousePosChange;
+var mouseScr, mouseScrLast, mouseScrChange;
+var fnAfterMouseMove;
 
-// volake funkcie by tu mali byt, ktore budu volane z onEF, onKD, atd..
+var keysEvent;		// keydown or keyup
+var keysDown;		// keydown (no keyup yet)		// eg. SHIFT=running
 
-function setupInput()
+/*
+	initInput(afterMouseMove);
+	function afterMouseMove()
+	{
+		if (kd('SPACE'))
+			cam.move( v2m(mouseChange, -cam.zoom) );
+	}
+
+	teoreticky by som mohol dorobit, ze:
+		if (PressedA)
+		if (holdsNUMP)
+*/
+
+
+
+//////////////////////////////////////////////////////////////////
+// init & callback
+
+function initInput()
 {
 	mousePos		= v2null();
 	mousePosLast	= v2null();
+	mousePosChange	= v2null();
 	mouseScr		= v2null();
 	mouseScrLast	= v2null();
+	mouseScrChange	= v2null();
+
+	keysDown = [];
+	keysEvent = [];
 }
 
-function kd(c)	// isKeyDown
+function inputSetFnAfterMM(fn)
 {
-	return arrKd[c];
+	fnAfterMouseMove = fn;
 }
-function ke(c)	// isKeyEvent
-{
-	return arrKe[c];
-}
-function kc(c)	// isKeyPressed ci co
-{
-	return arrKc[c];
-}
-function kp(c)
-{
-	return arrKd[c] && arrKc[c];
-}
-
 function inputAfterFrame()
 {
-	arrKc = [];
-	arrKx = [];
+	keysEvent = [];
+	mousePosChange = v2null();
 }
 
-function onMouseMove()
+
+
+////////////////////////////////////////////////////////////
+// KEYS:
+//
+// if (keyDown('A'))
+// if (keyDown('0'))
+// if (kd('UP'))
+// if (kd('NUM1'))
+//
+// if (keyPressed('ENTER'))
+// if (kp('ESC'))
+// if (kp('MOUSE'))
+//
+// use these keys:
+//		ABCDEFGHIJKLMNOPQRSTUWVXYZ 0123456789
+//		UP DN LT RT (arrows)
+//		ENTER SPACE ESC TAB, SHIFT CTRL ALT
+//		NUM+ NUM- NUM* NUM0 NUM1..
+//		MOUSE
+//
+
+function keyDown(c)		{ return keysDown[c]; }
+function keyPressed(c)	{ return keysDown[c] && keysEvent[c]; }
+function kd(c)			{ return keysDown[c]; }
+function kp(c)			{ return keysDown[c] && keysEvent[c]; }
+
+
+function onKeyDown(e)	// call this event
 {
-	/*
-		var of = $('#c').offset();
+	var c = e.keyCode;
+	keysDown[c] = true;
+	keysEvent[c] = true;
+
+	var ch = getAlternativeCode(c);
+	if (!ch) return;
+	keysDown[ch] = true;
+	keysEvent[ch] = true;
+}
+
+function onKeyUp(e)	// call this event
+{
+	var c = e.keyCode;
+	keysDown[c] = false;
+	keysEvent[c] = true;
+
+	var ch = getAlternativeCode(c);
+	if (!ch) return;
+
+	keysDown[ch] = false;
+	keysEvent[ch] = true;
+}
+
+
+
+////////////////////////////////////////////////////////////
+// MOUSE
+//
+
+function onMouseDown(e)
+{
+	keysDown['MOUSE'] = true;
+	keysEvent['MOUSE'] = true;
+}
+function onMouseUp()
+{
+	keysDown['MOUSE'] = false;
+	keysEvent['MOUSE'] = true;
+}
+
+function onMouseMove(e)
+{
+	mousePosLast = v2copy(mousePos);
+	mouseScrLast = v2copy(mouseScr);
+
+	var cam = getCamera();
+	var t = e.target;
+	mouseScr = v2(t.mouseX, t.mouseY);
+	mousePos = cam.fromScreen(mouseScr);
+
+	mousePosChange = v2sub(mousePos, mousePosLast);
+	mouseScrChange = v2sub(mouseScr, mouseScrLast);
+
+	if (fnAfterMouseMove) fnAfterMouseMove();
+}
+/*
+	i dont relly remember what's this for
+	var of = $('#c').offset();
 	var c = $('#c');
 	var w = $(window);
 	of = v2( of.left, of.top );
 	c = v2( c.width(), c.height() );
 	w = v2( w.width(), w.height() );
+	// mscr = (m-of) * (w/c);
+	mouseScr = v2multV( v2sub(m, of), v2divV(w, c) );
+*/
 
-	var m = v2( e.target.mouseX, e.target.mouseY );
 
-	// mousePos = (m-of) * (w/c);
-	mouseScrLast = mouseScr;
-	mouseScr = v2multV(
-				v2sub(m, of),
-				v2divV(w, c)
-				);
-
-	mouseLast = mousePos;
-	mousePos = screenToWorld(mouseScr);
-
-	if (kd['SPACE'])
-	{
-		var diff = v2sub(mouseScr, mouseScrLast);
-		lockCam = false;
-
-		var z = g_camZoom;
-		addCamPosition(-diff.x/z, -diff.y/z);
-	}
-	*/
-}
-function onMouseDown(e)
-{
-	/*
-	if (!kd['mouse']) kx['mouse'] = true;
-	kd['mouse'] = true;
-	kc['mouse'] = true;
-
-	// grasping
-	grasped = [];
-
-	var bAllowGraspingOne = 1;
-	var g = 0;
-	if (bAllowGraspingOne)
-		g = getCircleAtMouse();
-	if (g)
-	{
-		grasped = g;
-		g_lastUsedObj = g;
-	}
-
-	if (grasped)
-		$('#sliders').hide();
-	*/
-}
-function onMouseUp()
-{
-	/*
-	if (kd['mouse']) kx['mouse'] = true;
-	kd['mouse'] = false;
-	kc['mouse'] = true;
-
-	$('#sliders').show();
-	*/
-}
-
-function onKeyDown(e)
-{
-	/*
-	var c = e.keyCode;
-	if (!kd[c]) kx[c] = true;
-	kd[c] = true;
-	kc[c] = true;
-
-	var ch = getAlternativeCode(c);
-	if (ch)
-	{
-		kd[ch] = true;
-		kc[ch] = true;
-	}
-
-	logKey(c, 'down');
-	*/
-}
-
-function onKeyUp(e)
-{
-	/*
-	var c = e.keyCode;
-	if (kd[c]) kx[c] = true;
-	kd[c] = false;
-	kc[c] = true;
-
-	var ch = getAlternativeCode(c);
-	if (ch)
-	{
-		kd[ch] = false;
-		kc[ch] = true;
-	}
-
-	logKey(c);
-	*/
-}
-
-// tymto by som inak nemusel zapratavat global
+// event testing page: http://javascript.info/tutorial/keyboard-events
 function getAlternativeCode(c)
 {
 	var ch = String.fromCharCode(c);
@@ -168,6 +176,7 @@ function getAlternativeCode(c)
 	if (c==17) return 'CTRL';
 	if (c==18) return 'ALT';
 
+	if (c==9) return 'TAB';
 	if (c==13) return 'ENTER';
 	if (c==27) return 'ESC';
 	if (c==32) return 'SPACE';

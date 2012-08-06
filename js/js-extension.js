@@ -75,7 +75,7 @@ function bindOnMouseWheel(fn)
 		var d = extractDelta(e);
 		fn(d);
 	});
-});
+}
 
 
 
@@ -99,6 +99,8 @@ function err(s, ret)
 // nicely formatted number, nobody likes 1.5528350973420397532
 function nice(f)
 {
+	if (typeof f != 'number') return f;
+
 	function fixed(f, dec) { return parseFloat( f.toFixed(dec) ); }
 
 	var a = Math.abs(f);

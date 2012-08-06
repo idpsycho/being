@@ -1,14 +1,41 @@
-require([
-	'math'
-]);
+require(['js/math']);
+
+function isDef()
+{
+	if (arguments.length == 1)
+		return typeof arguments[0] != 'undefined';
+
+	for (var i=0; i < arguments.length; i++)
+		if ( !isDef(arguments[i]) )
+			return false;
+
+	return true;	// all was defined
+}
+
+var cameraJS_camera;	// might get this out of global
+
+function getCamera()
+{
+	if (!cameraJS_camera)
+		cameraJS_camera = new Camera();
+
+	return cameraJS_camera;
+}
 
 function Camera()
 {
-	var t = this;
-	var pos = v2(0, 0);
-	var zoom = 1;
-	var lockedOn;
+	var t		= this;
+	t.pos		= v2(0, 0);		// centered on screen
+	t.zoom		= 1;
+	t.lockedOn	= null;	// .pos, or .x .y
+	t.w			= 800;	// screen width
+	t.h			= 480;	// and height
 
+	t.onRESIZE = function(w, h)
+	{
+		t.w = w;
+		t.h = h;
+	}
 	t.reset = function()
 	{
 		pos = v2(0, 0);
@@ -16,120 +43,54 @@ function Camera()
 
 		// apply??
 	}
-
-	t.afterFrame = function()
+	t.updateStage = function(stage)
 	{
-		t.updateGraphics();
+		t.updateLocking();
+
+		stage.scaleX = t.zoom;
+		stage.scaleY = t.zoom;
+
+		stage.x = t.w/2 - t.pos.x * t.zoom;
+		stage.y = t.h/2 - t.pos.y * t.zoom;
 	}
-	t.updateGraphics = function()
+	t.updateLocking = function()
 	{
-		/*
-		var w = stage.stageWidth;
-		var h = stage.stageHeight;
+		if (!t.lockedOn) return;
+		var o = t.lockedOn;
 
-		var z = g_camZoom;
-		stage.scaleX = z;
-		stage.scaleY = z;
+		// setPos could be goTowardsPos() for smoothness
 
-		g_camY = min(g_camY, currentMaxY());
+		if (isDef(o.x, o.y))
+			return t.setPos( v2(o.x, o.y) );
 
-		var x, y;
-		x = w/2 - g_camX * z;
-		y = h/2 - g_camY * z;
-
-		stage.x = x;
-		stage.y = y;
-		*/
+		if ( isDef(o.pos) && isDef(o.pos.x, o.pos.y) )
+			return t.setPos( o.pos );
 	}
-	t.move = function(v)
+	t.setPos = function(v)
 	{
-		v2addMe(pos, v);
+		t.pos = v2copy(v);
+		t.unlock();
 	}
-	t.center = function(v)
+
+	t.move = function(v)	{ t.setPos( v2add(t.pos, v) ); }
+	t.lockTo = function(obj){ t.lockedOn = obj; }
+	t.unlock = function()	{ t.lockedOn = null; }
+	t.setZoom = function(f)	{ zoom = f; }
+	t.zoomIn = function(f)	{ zoom *= f; }
+
+	t.fromScreen = function(v)
 	{
-		pos = v2copy(v);
+		var x = (v.x-t.w/2)/t.zoom + t.pos.x;
+		var y = (v.y-t.h/2)/t.zoom + t.pos.y;
+		return v2(x, y);
 	}
-	t.setZoom = function(f)
+	t.toScreen = function(v)
 	{
-		zoom = f;
+		var x = (v.x - t.pos.x)*t.zoom + t.w/2;
+		var y = (v.y - t.pos.y)*t.zoom + t.h/2;
+		return v2(x, y);
 	}
-	t.zoomIn = function(f)
-	{
-		zoom *= f;
-	}
-
-	t.fromScreen = function(v, y)
-	{
-		v = useV2(v, y);
-		/*
-			var w2 = stage.stageWidth/2;
-			var h2 = stage.stageHeight/2;
-			var z = g_camZoom;
-
-			x = (x-w2)/z + g_camX;
-			y = (y-h2)/z + g_camY;
-
-			return v2(x, y);
-		*/
-	}
-	t.toScreen = function(v, y)
-	{
-		v = useV2(v, y);
-		/*
-			var w = stage.stageWidth;
-			var h = stage.stageHeight;
-
-			x = (x - g_camX)*z + w2;
-			y = (y - g_camY)*z + h2;
-
-			return v2(x, y);
-		*/
-	}
-
-function screenToWorld(x, y)
-{
-	if (x.x) {
-		y = x.y;
-		x = x.x;
-	}
-
-	var w2 = stage.stageWidth/2;
-	var h2 = stage.stageHeight/2;
-	var z = g_camZoom;
-
-	x = (x-w2)/z + g_camX;
-	y = (y-h2)/z + g_camY;
-
-	return v2(x, y);
 }
-
-function worldToScreen(x, y)
-{
-	if (x.x) {
-		y = x.y;
-		x = x.x;
-	}
-
-	var w = stage.stageWidth;
-	var h = stage.stageHeight;
-
-	x = (x - g_camX)*z + w2;
-	y = (y - g_camY)*z + h2;
-
-	return v2(x, y);
-}
-
-	// sem pojde co sa s nou moze diat
-	// plus nejake binds aby to aj ovplyvnilo grafiku
-	// t.onResize
-	// t.zoomIn, t.zoomOut
-	// t.centerOn(pos|obj)
-	// t.updateGraphics
-	//
-
-	return t;
-}
-
 
 /*
 

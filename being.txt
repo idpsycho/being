@@ -14,3 +14,7 @@ ability to play with as any object
 	human - movement, take/drop, throw, eat
 	animal - movement, health, survival
 	rock - do nothing, but camera follows it, and it may has some stats
+
+@ co nakodit
+pohyb kamery
+
