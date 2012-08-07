@@ -38,20 +38,20 @@ function Camera()
 	}
 	t.reset = function()
 	{
-		pos = v2(0, 0);
-		zoom = 1;
+		t.pos = v2(0, 0);
+		t.zoom = 1;
 
 		// apply??
 	}
-	t.updateStage = function(stage)
+	t.updateWorld = function(ikWorld)
 	{
 		t.updateLocking();
 
-		stage.scaleX = t.zoom;
-		stage.scaleY = t.zoom;
+		ikWorld.scaleX = t.zoom;
+		ikWorld.scaleY = t.zoom;
 
-		stage.x = t.w/2 - t.pos.x * t.zoom;
-		stage.y = t.h/2 - t.pos.y * t.zoom;
+		ikWorld.x = t.w/2 - t.pos.x * t.zoom * g_ivankRatio;
+		ikWorld.y = t.h/2 - t.pos.y * t.zoom * g_ivankRatio;
 	}
 	t.updateLocking = function()
 	{
@@ -60,23 +60,44 @@ function Camera()
 
 		// setPos could be goTowardsPos() for smoothness
 
+		var vTarget;
 		if (isDef(o.x, o.y))
-			return t.setPos( v2(o.x, o.y) );
+			vTarget = v2(o.x, o.y);
 
 		if ( isDef(o.pos) && isDef(o.pos.x, o.pos.y) )
-			return t.setPos( o.pos );
+			vTarget = v2c(o.pos);
+
+		t.leapTo(vTarget, 0.05);
 	}
-	t.setPos = function(v)
+	t.leapTo = function(v, f01)
+	{
+		var vTowards = v2m( v2sub(v, t.pos), f01 );
+		var v = v2add(t.pos, vTowards)
+		t.setPos( v, 1 );
+	}
+	t.setPos = function(v, dontUnlock)
 	{
 		t.pos = v2copy(v);
+
+		if (dontUnlock) return;
 		t.unlock();
 	}
 
-	t.move = function(v)	{ t.setPos( v2add(t.pos, v) ); }
+	t.move = function(v)
+	{
+		var f = 5/t.zoom;
+		if (v=='up') v = v2(0, -f);
+		if (v=='dn') v = v2(0, f);
+		if (v=='lt') v = v2(-f, 0);
+		if (v=='rt') v = v2(f, 0);
+		t.setPos( v2add(t.pos, v) );
+	}
 	t.lockTo = function(obj){ t.lockedOn = obj; }
 	t.unlock = function()	{ t.lockedOn = null; }
-	t.setZoom = function(f)	{ zoom = f; }
-	t.zoomIn = function(f)	{ zoom *= f; }
+	t.setZoom = function(f)	{ t.zoom = f; }
+	t.zoomIn = function(f)	{ if (!f) f = 1.05; t.setZoom(t.zoom * f); }
+	t.zoomOut = function(f)	{ if (!f) f = 1.05; t.setZoom(t.zoom / f); }
+	t.zoomWheel = function(d) { d>0 ? t.zoomIn() : t.zoomOut(); }
 
 	t.fromScreen = function(v)
 	{
@@ -90,6 +111,12 @@ function Camera()
 		var y = (v.y - t.pos.y)*t.zoom + t.h/2;
 		return v2(x, y);
 	}
+	t.screenDrag = function(scrPixels)
+	{
+		var v = v2m(scrPixels, -1/t.zoom/g_ivankRatio);
+		t.move(v);
+	}
+
 }
 
 /*

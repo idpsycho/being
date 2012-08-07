@@ -99,7 +99,21 @@ function err(s, ret)
 // nicely formatted number, nobody likes 1.5528350973420397532
 function nice(f)
 {
-	if (typeof f != 'number') return f;
+	if (!arguments.length) return;
+	if (arguments.length > 1)
+	{
+		var s = '';
+		for (var i=0; i < arguments.length; i++)
+			s += nice( arguments[i] )+' ';
+
+		return s;
+	}
+
+	if (f && isDef(f.x, f.y))
+		return nice(f.x)+' '+nice(f.y);
+
+	if (typeof f != 'number')
+		return f;
 
 	function fixed(f, dec) { return parseFloat( f.toFixed(dec) ); }
 
@@ -108,6 +122,24 @@ function nice(f)
 	if (a>=1)	return fixed(f, 1);
 	if (a>=0.1)	return fixed(f, 2);
 	return fixed(f, 3);
+}
+
+
+function out()
+{
+	var s = '';
+	for (var i=0; i < arguments.length; i++)
+	{
+		var a = arguments[i];
+
+		if (isDef(a.x, a.y))
+			s += nice(a.x)+' '+nice(a.y);
+		else
+			s += nice(a)
+
+		s+=' ';
+	}
+	console.log(s);
 }
 
 

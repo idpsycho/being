@@ -3,24 +3,22 @@ require([
 	'js/camera'
 ], initInput);
 
-var mousePos, mousePosLast, mousePosChange;
+// NEW - this is used in onMouseMove, and rest is updated by it every frame
+var mouseScrNew, mousePosNew;
 var mouseScr, mouseScrLast, mouseScrChange;
-var fnAfterMouseMove;
+var mousePos, mousePosLast, mousePosChange;
 
 var keysEvent;		// keydown or keyup
 var keysDown;		// keydown (no keyup yet)		// eg. SHIFT=running
 
 /*
-	initInput(afterMouseMove);
-	function afterMouseMove()
-	{
-		if (kd('SPACE'))
-			cam.move( v2m(mouseChange, -cam.zoom) );
-	}
-
-	teoreticky by som mohol dorobit, ze:
+	HOW ABOUT:
 		if (PressedA)
 		if (holdsNUMP)
+
+	HOW ABOUT:
+		if ('SHIFT A')
+		if ('UP,W')
 */
 
 
@@ -30,25 +28,34 @@ var keysDown;		// keydown (no keyup yet)		// eg. SHIFT=running
 
 function initInput()
 {
-	mousePos		= v2null();
-	mousePosLast	= v2null();
-	mousePosChange	= v2null();
+	mouseScrNew		= v2null();
+	mousePosNew		= v2null();
+
 	mouseScr		= v2null();
 	mouseScrLast	= v2null();
 	mouseScrChange	= v2null();
+	mousePos		= v2null();
+	mousePosLast	= v2null();
+	mousePosChange	= v2null();
 
 	keysDown = [];
 	keysEvent = [];
 }
 
-function inputSetFnAfterMM(fn)
-{
-	fnAfterMouseMove = fn;
-}
 function inputAfterFrame()
 {
+	// keys
 	keysEvent = [];
-	mousePosChange = v2null();
+
+	// mouse
+	mouseScrLast = v2copy(mouseScr);
+	mousePosLast = v2copy(mousePos);
+
+	mouseScr = v2copy(mouseScrNew);
+	mousePos = v2copy(mousePosNew);
+
+	mouseScrChange = v2sub(mouseScr, mouseScrLast);
+	mousePosChange = v2sub(mousePos, mousePosLast);
 }
 
 
@@ -73,10 +80,40 @@ function inputAfterFrame()
 //		MOUSE
 //
 
-function keyDown(c)		{ return keysDown[c]; }
-function keyPressed(c)	{ return keysDown[c] && keysEvent[c]; }
-function kd(c)			{ return keysDown[c]; }
-function kp(c)			{ return keysDown[c] && keysEvent[c]; }
+function kd(c)			{ return keyDown(c); }
+function kp(c)			{ return keyPressed(c); }
+function keyDown(c)
+{
+	var k = c.split(',');	// if (keyDown('UP,W'))
+	if (k.length > 1)
+	{
+		for (var i=0; i < k.length; i++)
+		{
+			var c = k[i];
+			if (keysDown[c])
+				return true;
+		}
+		return false;
+	}
+
+	return keysDown[c];
+}
+function keyPressed(c)
+{
+	var k = c.split(',');	// if (keyPressed('UP,W'))
+	if (k.length > 1)
+	{
+		for (var i=0; i < k.length; i++)
+		{
+			var c = k[i];
+			if (keysDown[c] && keysEvent[c])
+				return true;
+		}
+		return false;
+	}
+
+	return keysDown[c] && keysEvent[c];
+}
 
 
 function onKeyDown(e)	// call this event
@@ -123,18 +160,11 @@ function onMouseUp()
 
 function onMouseMove(e)
 {
-	mousePosLast = v2copy(mousePos);
-	mouseScrLast = v2copy(mouseScr);
-
-	var cam = getCamera();
 	var t = e.target;
-	mouseScr = v2(t.mouseX, t.mouseY);
-	mousePos = cam.fromScreen(mouseScr);
 
-	mousePosChange = v2sub(mousePos, mousePosLast);
-	mouseScrChange = v2sub(mouseScr, mouseScrLast);
-
-	if (fnAfterMouseMove) fnAfterMouseMove();
+	// this will be aplied in inputAfterFrame()
+	mouseScrNew = v2(t.mouseX, t.mouseY);
+	mousePosNew = getCamera().fromScreen(mouseScrNew);
 }
 /*
 	i dont relly remember what's this for

@@ -1,3 +1,25 @@
+@ to do
+	@ player looking towards mouse
+	player.angle = (mouseScr - g_cam.toScreen(player.pos)).getAngle()
+	a potom este nejakym sposobom spravit videnie veci
+	ze kazda vec bude v playerovi ulozena kde ju vidi
+	a ked sa na nu nebude pozerat, a vec sa presunie, tak on nebude vidiet to presuvanie
+	(aj ked sa treba silno zamysliet, ci to pomoze hre, a ci neni prioritnejsie to ai)
+
+	@ simple deer AI
+	na zaciatok nejake startovne primitivne AI pre cloveka aj deer
+
+	@ hunger-indicating sprite inside human
+	potom vymysliet nejaky sposobom zobrazovania hunger
+	ale nie gui, malo by to byt v postave ako zobrazovatelna sucast
+
+	@ AI heading, visibility info
+	deer by mohli mat smerovanie, cize nejak naznacit 'oci' (dve cierne bodky)
+	a k tomu do AI spravit intersections v tom smere, aby sa do AI dostavala informacia o videnych veciach
+	to sa potom moze pouzit aj pri hracovi, ze bude vidiet len to kde je natoceny
+
+
+
 @ cim zacat
 background - green grass
 thing - circle, color, name, position, direction, box2d, radius
@@ -14,7 +36,3 @@ ability to play with as any object
 	human - movement, take/drop, throw, eat
 	animal - movement, health, survival
 	rock - do nothing, but camera follows it, and it may has some stats
-
-@ co nakodit
-pohyb kamery
-

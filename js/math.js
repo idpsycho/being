@@ -63,6 +63,7 @@ function max(a, b, c)
 		mx = max(mx, arguments[i]);
 	return mx;
 }
+function minmax01(f) { return minmax(f, 0, 1); }
 function minmax(f, mn, mx)
 {
 	if (f > mx) return mx;
@@ -353,6 +354,10 @@ function v2isFurtherThan(t, v, maxDist)
 function v2rnd(mn, mx)
 {
 	return v2( rnd(mn, mx)*rndsign(), rnd(mn, mx)*rndsign() );
+}
+function v2rndxy(x, y)
+{
+	return v2( rnd11(x)*rndsign(), rnd11(y)*rndsign() );
 }
 // ***Me stuff
 function v2multMe(v, f)		{ v.x*=f;	v.y*=f; }

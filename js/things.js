@@ -1,4 +1,14 @@
 
+function b2v(v, y)
+{
+	var b2Vec2 = Box2D.Common.Math.b2Vec2;
+
+	if (typeof y == 'undefined')
+		return new b2Vec2(v.x, v.y);
+	else
+		return new b2Vec2(v, y);
+}
+
 function Thing()
 {
 	var t=this;
@@ -22,19 +32,72 @@ function Thing()
 		if (t.body)
 		{
 			var pos = t.body.GetPosition();
-			t.pos = v2b2(pos);
+			t.pos = v2copy(pos);
 
 			// dont have any viewing angle, so this isnt necessary yet
 			//var angle = t.body.GetAngle()*inDegs;
 		}
 
 		t.doAI();
+		t.updateSmoothMove();
 
 		if (t.sprite)
 		{
-			t.sprite.x = t.pos.x;
-			t.sprite.y = t.pos.y;
+			t.sprite.x = t.pos.x * g_ivankRatio;
+			t.sprite.y = t.pos.y * g_ivankRatio;
 		}
+	}
+	t.action = function(a)
+	{
+		var f = 1;
+		if (0) {}
+		else if (a == 'up') t.move( v2(0, -f) );
+		else if (a == 'dn') t.move( v2(0, f) );
+		else if (a == 'lt') t.move( v2(-f, 0) );
+		else if (a == 'rt') t.move( v2(f, 0) );
+		else
+			t.currAction = null;
+	}
+	t.updateSmoothMove = function()
+	{
+		var b = t.body;
+
+		b.SetLinearDamping(15);
+
+		if (t.currAction)
+		{
+			v2multMe(t.currAction, 1);
+			b.ApplyImpulse( b2v(t.currAction), b2v(0, 0) );
+			var vel = b.GetLinearVelocity();
+			var len = v2len(vel);
+			//if (len > 200000) v2multMe(vel, 20000/len);
+			//b.SetLinearVelocity(vel);
+			t.currAction = null;
+		}
+	}
+
+	t.move = function(v)
+	{
+		if (t.body)
+		{
+			if (!t.currAction)
+				t.currAction = v2null();
+			v2addMe(t.currAction, v);
+		}
+		else
+		{
+			t.addPos(v);
+		}
+	}
+	t.addPos = function(v)
+	{
+		t.setPos( v2add(t.pos, v) );
+	}
+	t.setPos = function(v)
+	{
+		t.pos = v2copy(v);
+		if (t.body)
+			t.body.SetPosition( b2v(v) );
 	}
 	t.doAI = function()
 	{
@@ -58,24 +121,29 @@ function Thing()
 			}
 		}
 	}
-	t.setStage = function(stage)
+	t.setWorld = function(ikWorld)
 	{
 		t.sprite = new Sprite();
 
 		var g = t.sprite.graphics;
 		g.beginFill(t.clr);
-		g.drawCircle(0, 0, t.radius*10);
+		g.drawCircle(0, 0, t.radius * g_ivankRatio);
 
-		stage.addChild(t.sprite);
+		ikWorld.addChild(t.sprite);
 	}
 	t.setBox2d = function(box2d)
 	{
-		t.body = createBox2dCircle(t.radius, t.density);
+		t.body = createBox2dCircle(box2d, t.radius, t.density);
+		if (!t.body) return;
+
+		//t.body.setPosition( b2v(t.pos) );
 	}
-	function createBox2dCircle(radius, density)
+
+	function createBox2dCircle(box2d, radius, density)
 	{
 		var
 			b2Vec2			= Box2D.Common.Math.b2Vec2,
+			b2Body			= Box2D.Dynamics.b2Body,
 			b2BodyDef		= Box2D.Dynamics.b2BodyDef,
 			b2FixtureDef	= Box2D.Dynamics.b2FixtureDef,
 			b2CircleShape	= Box2D.Collision.Shapes.b2CircleShape;
@@ -100,7 +168,7 @@ function Thing()
 
 }
 
-function genThing(name, x, y)
+function genThing(name)
 {
 	function chooseRadius(val)
 	{
@@ -115,7 +183,7 @@ function genThing(name, x, y)
 
 	var t = new Thing();
 	t.name = name;
-	t.pos = (x&&y) ? v2(x, y) : v2rnd(100);
+	t.pos = v2rnd(100);
 	t.clr = def.clr;
 	t.radius = chooseRadius(def.radius);	// might be '1' or [1, 2] range
 	t.density = def.density;
@@ -142,18 +210,18 @@ var arrThingsDef =
 	},
 	{
 		name:		'human',
-		clr:		0xeecc77,
+		clr:		0xf2cba4,
 		radius:		0.5,
 	},
 	{
 		name:		'animal',
-		clr:		0xdc801e,
+		clr:		0xc26d31,
 		radius:		[0.5, 1],
 	},
 	{
 		name:		'tree',
 		clr:		0x327b0e,
 		radius:		[0.3, 2],
-		density:	50,		// should be static, or even better with joint, but for now..
+		density:	10,		// should be static, or even better with joint, but for now..
 	},
 ];

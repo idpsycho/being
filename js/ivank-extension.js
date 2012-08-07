@@ -3,13 +3,16 @@ require([
 	'js/js-extension'
 ]);
 
+var g_ivankRatio = 100;
+
 // dbg = new DebugLayer(stage);
 // dbg.afterFrame();
 
-function DebugLayer(stage)
+function DebugLayer(stage, applyRatio)
 {
 	var t=this;
 	var dbg, dbgStage;
+	var ivankRatio = applyRatio ? g_ivankRatio : 1;
 
 	dbgStage = new Sprite();
 	stage.addChild(dbgStage);
@@ -37,6 +40,12 @@ function DebugLayer(stage)
 		if (!w) w = 1;
 		clr = normalizeClr(clr);
 
+		x *= ivankRatio;
+		y *= ivankRatio;
+		x2 *= ivankRatio;
+		y2 *= ivankRatio;
+		//w *= ivankRatio;
+
 		dbg.lineStyle(w, clr);
 		dbg.moveTo(x, y);
 		dbg.lineTo(x2, y2);
@@ -50,6 +59,9 @@ function DebugLayer(stage)
 		clr = normalizeClr(clr);
 		t.setTextFormat( new TextFormat("Arial", fontSize, clr) );
 		dbgStage.addChild(t);
+
+		x *= ivankRatio;
+		y *= ivankRatio;
 
 		t.setText(s);
 		t.x = x;
