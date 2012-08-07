@@ -1,7 +1,8 @@
 require([
 	// main libraries
 	'js/libs/ivank.js',
-	'js/libs/Box2d.js',
+	//'js/libs/Box2d.js',
+	'js/libs/Box2d.min.js',
 	'js/libs/jquery.js',
 
 	// modules
