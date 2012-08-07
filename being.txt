@@ -20,6 +20,32 @@
 
 
 
+@ nutritions
+human.addChild('nutritions')
+t.updateChildren() - each c->update(t)
+Nutritions:
+	t.max
+	t.current
+	t.eat(nutrition)	t.current += nutrition
+	t.expend(energy)	t.current -= energy;
+
+@ eyes
+human.addChild('eyes')
+Eyes:
+	updateWhatIsSeen()
+	t.getVisible()		return t.arrVisible;
+
+
+@ hunger indicator status obrazovka + efekt (zmensovanie panaka alebo co)
+so vsetkymi vlastnostami + kazdy efekt by mal nejaky efekt, aby bolo vidiet, ze sa nieco deje, a v tej status obrazovke by mohli byt zvyraznene kriticke vlastnosti (hlad, zivot, unava, zmrznutie, vykrvacavanie)
+	 mimochodom ta status obrazovka by potom bola ako taky nahlad do svojej mysle
+
+
+
+
+
+
+@ ========================================================
 @ cim zacat
 background - green grass
 thing - circle, color, name, position, direction, box2d, radius

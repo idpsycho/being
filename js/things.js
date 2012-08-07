@@ -62,7 +62,7 @@ function Thing()
 	{
 		var b = t.body;
 
-		b.SetLinearDamping(15);
+		b.SetLinearDamping(7);
 
 		if (t.currAction)
 		{
@@ -70,9 +70,16 @@ function Thing()
 			b.ApplyImpulse( b2v(t.currAction), b2v(0, 0) );
 			var vel = b.GetLinearVelocity();
 			var len = v2len(vel);
-			//if (len > 200000) v2multMe(vel, 20000/len);
-			//b.SetLinearVelocity(vel);
+
 			t.currAction = null;
+
+			if ('limit speed')
+			{
+				var mx = 3;
+				if (len > mx) v2multMe(vel, mx/len);
+				b.SetLinearVelocity(vel);
+				//gui.drawText(nice(len), 0, 0);
+			}
 		}
 	}
 
