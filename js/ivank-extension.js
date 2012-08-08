@@ -8,6 +8,22 @@ var g_ivankRatio = 100;
 // dbg = new DebugLayer(stage);
 // dbg.afterFrame();
 
+
+ivank_drawText = function(stage, s, x, y, clr)
+{
+	var fontSize = 20;
+
+	var t = new TextField();
+	clr = normalizeClr(clr);
+	t.setTextFormat( new TextFormat("Arial", fontSize, clr) );
+	stage.addChild(t);
+
+	t.setText(s);
+	t.x = x;
+	t.y = y;
+}
+
+
 function DebugLayer(stage, applyRatio)
 {
 	var t=this;

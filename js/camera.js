@@ -1,16 +1,5 @@
-require(['js/math']);
+require(['js/math', 'js/js-extension']);
 
-function isDef()
-{
-	if (arguments.length == 1)
-		return typeof arguments[0] != 'undefined';
-
-	for (var i=0; i < arguments.length; i++)
-		if ( !isDef(arguments[i]) )
-			return false;
-
-	return true;	// all was defined
-}
 
 var cameraJS_camera;	// might get this out of global
 

@@ -1,8 +1,8 @@
 require([
 	// main libraries
 	'js/libs/ivank.js',
-	//'js/libs/Box2d.js',
-	'js/libs/Box2d.min.js',
+	'js/libs/Box2d.js',
+	//'js/libs/Box2d.min.js',
 	'js/libs/jquery.js',
 
 	// modules
@@ -42,26 +42,31 @@ function addThingN(n, name)
 }
 function addThing(name, x, y)
 {
-	var m = 3 / g_ivankRatio;
+	var m = 3 / g_ivankRatio * 0.7;
 	var w = m * g_ikStage.stageWidth;
 	var h = m * g_ikStage.stageHeight;
 
-	var t = genThing(name, x, y);
+	var t = genThing(name);
 	if (!t) return;
 
-	t.setWorld(g_ikWorld);
-	t.setBox2d(g_box2d);
-
-	var v = v2rndxy(w, h);
 	if (isDef(x, y))
-		v = v2(x, y);
-
-	t.setPos( v );
-	out('adding', name, 'at', v);
+		t.setPos(x, y);
+	else
+	{
+		var tried=0;
+		do
+		{
+			t.setPos( v2rndxy(w, h) );
+		}
+		while(t.isColliding() && tried++<100);
+		//if (tried>1) out('tries', tried);
+		//ivank_drawText(t.sprite, tried, 0, 0);
+	}
 
 	g_arrThings.push(t);
 	return t;
 }
+
 
 /*
 		███    ████   ███    █  █    ███
@@ -77,8 +82,8 @@ function drawNewDebugTexts()
 	//gui.drawText(fps, 0, 0);
 	//gui.drawText(nice(g_cam.pos, ':', g_cam.zoom), 0, 30);
 
-	var p = g_player.pos;
-	var vel = g_player.body.GetLinearVelocity();
+	//var p = g_player.pos;
+	//var vel = g_player.body.GetLinearVelocity();
 	//dbg.drawText(nice(vel), p.x, p.y);
 }
 
@@ -191,6 +196,7 @@ function initBox2d()
 	var b2World = Box2D.Dynamics.b2World;
 
 	g_box2d = new b2World( new b2Vec2(0, 0), false );
+	g_box2d.Step(1/60, 6, 2);
 }
 
 function initIvank()

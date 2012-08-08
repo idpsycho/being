@@ -3,7 +3,7 @@ function b2v(v, y)
 {
 	var b2Vec2 = Box2D.Common.Math.b2Vec2;
 
-	if (typeof y == 'undefined')
+	if (notDef(y))
 		return new b2Vec2(v.x, v.y);
 	else
 		return new b2Vec2(v, y);
@@ -100,11 +100,13 @@ function Thing()
 	{
 		t.setPos( v2add(t.pos, v) );
 	}
-	t.setPos = function(v)
+	t.setPos = function(v, y)
 	{
+		if (isDef(v,y)) v = v2(v, y);
+
 		t.pos = v2copy(v);
-		if (t.body)
-			t.body.SetPosition( b2v(v) );
+
+		t.applyPosToBox2d();
 	}
 	t.doAI = function()
 	{
@@ -138,36 +140,106 @@ function Thing()
 
 		ikWorld.addChild(t.sprite);
 	}
-	t.setBox2d = function(box2d)
+	t.setBox2d = function()
 	{
-		t.body = createBox2dCircle(box2d, t.radius, t.density);
+		t.body = createBox2dCircle(t.radius, t.density);
 		if (!t.body) return;
 
-		//t.body.setPosition( b2v(t.pos) );
+		if (t.name == 'tree')
+			t.createSpringAnchor();
+
+		t.setPos( v2(0, 0) );
 	}
 
-	function createBox2dCircle(box2d, radius, density)
+	t.createSpringAnchor = function(freq, damp)
 	{
-		var
-			b2Vec2			= Box2D.Common.Math.b2Vec2,
+		t.bodyAnchor = createBox2dStaticAnchor();
+
+		// vetvy sa daju hybat, pomaly sa vratia na miesto
+		t.bodyJoint = b2DistJointInit(t.body, t.bodyAnchor);
+		t.bodyJoint.frequencyHz = isDef(freq) ? freq : 1;
+		t.bodyJoint.dampingRatio = isDef(damp) ? damp : 0.5;
+
+		g_box2d.CreateJoint(t.bodyJoint);
+
+		t.centerSpringAnchor();
+	}
+	t.applyPosToBox2d = function()
+	{
+		if (!t.body) return;
+		t.body.SetPosition( b2v(t.pos) );
+		t.centerSpringAnchor();
+	}
+	t.centerSpringAnchor = function()
+	{
+		if (!t.bodyAnchor) return;
+		t.bodyAnchor.SetPosition( b2v(t.pos) );
+	}
+
+	t.isColliding = function()
+	{
+		for (var i=0; i < g_arrThings.length; i++)
+		{
+			if (t.collidesWith( g_arrThings[i] ))
+				return true;
+		}
+	}
+	t.collidesWith = function(a)
+	{
+		return doCirclesIntersect(t.pos, t.radius, a.pos, a.radius);
+	}
+
+	// toto hodit do math
+	function doCirclesIntersect(p1, r1, p2, r2)
+	{
+		return v2isCloserThan(p1, p2, r1+r2);
+	}
+
+	function b2DistJointInit(b1, b2)
+	{
+		var j = new Box2D.Dynamics.Joints.b2DistanceJointDef();
+		j.Initialize(b1, b2, b1.GetWorldCenter(), b2.GetWorldCenter());
+		return j;
+	}
+
+	function createBox2dStaticAnchor()
+	{
+		var b2Body			= Box2D.Dynamics.b2Body,
+			b2BodyDef		= Box2D.Dynamics.b2BodyDef,
+			b2FixtureDef	= Box2D.Dynamics.b2FixtureDef,
+			b2CircleShape	= Box2D.Collision.Shapes.b2CircleShape;
+
+		var bodyDef = new b2BodyDef();
+		var circle = new b2CircleShape();
+		var fixDef = new b2FixtureDef();
+		bodyDef.type = b2Body.b2_staticBody;
+		circle.m_radius = 0.00001;
+		fixDef.shape = circle;
+
+		var body = g_box2d.CreateBody(bodyDef);
+		body.CreateFixture(fixDef);
+
+		return body;
+	}
+
+	function createBox2dCircle(radius, density)
+	{
+		var	b2Vec2			= Box2D.Common.Math.b2Vec2,
 			b2Body			= Box2D.Dynamics.b2Body,
 			b2BodyDef		= Box2D.Dynamics.b2BodyDef,
 			b2FixtureDef	= Box2D.Dynamics.b2FixtureDef,
 			b2CircleShape	= Box2D.Collision.Shapes.b2CircleShape;
 
 		var bodyDef = new b2BodyDef();
-		bodyDef.type = b2Body.b2_dynamicBody;
-		//bodyDef.position.Set(0.0, 0);
-
 		var circle = new b2CircleShape();
-		//circle.m_p.Set(0, 0);
-		circle.m_radius = radius;
-
 		var fixDef = new b2FixtureDef();
+
+		bodyDef.type = b2Body.b2_dynamicBody;
+		circle.m_radius = radius;
 		fixDef.density = density;
 		fixDef.shape = circle;
 
-		var body = box2d.CreateBody(bodyDef);
+		var body = g_box2d.CreateBody(bodyDef);
 		body.CreateFixture(fixDef);
 
 		return body;
@@ -175,7 +247,7 @@ function Thing()
 
 }
 
-function genThing(name)
+function genThing(name, x, y)
 {
 	function chooseRadius(val)
 	{
@@ -190,10 +262,16 @@ function genThing(name)
 
 	var t = new Thing();
 	t.name = name;
-	t.pos = v2rnd(100);
+	t.pos = v2null();
 	t.clr = def.clr;
 	t.radius = chooseRadius(def.radius);	// might be '1' or [1, 2] range
 	t.density = def.density;
+
+	t.setWorld(g_ikWorld);
+	t.setBox2d();
+
+	if (isDef(x, y))
+		t.setPos(x, y);
 
 	return t;
 }
@@ -229,6 +307,6 @@ var arrThingsDef =
 		name:		'tree',
 		clr:		0x327b0e,
 		radius:		[0.3, 2],
-		density:	10,		// should be static, or even better with joint, but for now..
+		density:	1,		// should be static, or even better with joint, but for now..
 	},
 ];

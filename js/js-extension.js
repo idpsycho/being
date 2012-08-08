@@ -9,7 +9,28 @@ function time()
 	return new Date().getTime();
 }
 
+function isDef()
+{
+	if (arguments.length == 1)
+		return typeof arguments[0] != 'undefined';
 
+	for (var i=0; i < arguments.length; i++)
+		if ( !isDef(arguments[i]) )
+			return false;
+
+	return true;	// all was defined
+}
+function notDef()
+{
+	if (arguments.length == 1)
+		return typeof arguments[0] == 'undefined';
+
+	for (var i=0; i < arguments.length; i++)
+		if ( !notDef(arguments[i]) )
+			return false;
+
+	return true;	// all was undefined
+}
 
 ///////////////////////////////////////////////////////
 // Array
