@@ -24,6 +24,7 @@ var g_dt;
 var g_player;
 var dbg;	// world-space debug
 var gui;	// screen-space debug
+var arrErrors = [];
 
 
 function loadWorld(s)
@@ -129,6 +130,20 @@ function onEnterFrame()
 	g_cam.updateWorld(g_ikWorld);
 
 	inputAfterFrame();
+
+	drawConsoleErrors();
+}
+
+function drawConsoleErrors()
+{
+	if (!arrErrors.length) return;
+
+	gui.g.beginFill(0, 0.5);
+	gui.g.drawRect(10, 10, 500, arrErrors.length*20+20);
+	$.each(arrErrors, function(i, e)
+	{
+		gui.drawText(e, 20, 20+i*20, 'f00');
+	});
 }
 
 function processMouse()
@@ -178,16 +193,19 @@ function processInputs()
 
 function initBeing()
 {
+	window.onerror = function(err) { arrErrors.push(err); }
+
 	initIvank();
 
 	g_cam = getCamera();
 	onRESIZE();	// it has init stuff in it
 	initBox2d();
-	bindOnMouseWheel( g_cam.zoomWheel );
-
 	g_cam.setZoom(0.5);
 
+	bindOnMouseWheel( g_cam.zoomWheel );
+
 	loadWorld('human in forest');
+
 }
 
 function initBox2d()

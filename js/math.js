@@ -376,3 +376,19 @@ function v2normMe(v)
 	v.y*=len;
 }
 
+
+
+///////////////////////////////
+// box2d vector
+
+function b2null() { return new b2Vec2(0, 0); }
+function b2v(v, y)
+{
+	if (!Box2D) return;
+	var b2Vec2 = Box2D.Common.Math.b2Vec2;
+
+	if (notDef(y))
+		return new b2Vec2(v.x, v.y);
+	else
+		return new b2Vec2(v, y);
+}

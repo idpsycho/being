@@ -18,29 +18,49 @@
 	a k tomu do AI spravit intersections v tom smere, aby sa do AI dostavala informacia o videnych veciach
 	to sa potom moze pouzit aj pri hracovi, ze bude vidiet len to kde je natoceny
 
+@ treba poriesit ten system, ze budem mat
+{
+	name: 'thing'
+	for fuck's sake what's this
+	children = ['eyes', 'nutritions']
+}
+{
+	name: 'eyes'
+	nejak sem treba dat funkcionalitu, teoreticky cez nejake zakladne eventy nabindovat funkcionalitu
+}
+	@ co dalsie by sa sem dalo strcit z terajsieho Thing ?
+	position, circle, radius - ale v podstate to moze zostat aj hentam, pripadne sa to nepouzije zatial
+
+	chcem ze bude nejaky hollow Thing
+	a ten bude aj spritom
+	a donho budem potom pchat dalsie objekty ako childy
+	a automaticky sa ich grafika tam prida
+
+	cize mam:
+	#Thing				name, children, sprite, pos, clr, radius
+		#Body			density, body
+		#SpringAnchor	anchorBody, joint
+		#Movement		tam bude vsetok pohyb
+
+	################################################################
+	@ ako to bude fungovat
+	thing je nejaky stromovy zaklad, ktory inak nedokaze nic robit
+	len je sucastou levela, a moze mat pod sebou dalsie veci
+
+	genThing('circle')
+		- toto vytvori objekt, hodi ho do g_arrThings
+		- prida donho circle reprezentaciu, init vytvori sprite, hodi ho do ikWorld
 
 
-@ nutritions
-human.addChild('nutritions')
-t.updateChildren() - each c->update(t)
-Nutritions:
-	t.max
-	t.current
-	t.eat(nutrition)	t.current += nutrition
-	t.expend(energy)	t.current -= energy;
-
-@ eyes
-human.addChild('eyes')
-Eyes:
-	updateWhatIsSeen()
-	t.getVisible()		return t.arrVisible;
+	zaklad by malo byt thing, ktore by automaticky bolo aj circle zatial
+	otazka teda je uz len ze ako rozsirit circle o Body
 
 
-@ hunger indicator status obrazovka + efekt (zmensovanie panaka alebo co)
-so vsetkymi vlastnostami + kazdy efekt by mal nejaky efekt, aby bolo vidiet, ze sa nieco deje, a v tej status obrazovke by mohli byt zvyraznene kriticke vlastnosti (hlad, zivot, unava, zmrznutie, vykrvacavanie)
-	 mimochodom ta status obrazovka by potom bola ako taky nahlad do svojej mysle
+	@ -------------------------
+	treba cely terajsi Thing rozobrat na casti s roznou funkcionalitou, a potom uz sa uvidi co dalej
+	@ -------------------------------
 
-
+mozno by som to mal spravit tak, ze si poviem co by malo byt odseparovane od zakladu, a odseparujem to vo fungujucom kode do samostatneho celku
 
 
 

@@ -1,13 +1,4 @@
-
-function b2v(v, y)
-{
-	var b2Vec2 = Box2D.Common.Math.b2Vec2;
-
-	if (notDef(y))
-		return new b2Vec2(v.x, v.y);
-	else
-		return new b2Vec2(v, y);
-}
+require(['js/math']);
 
 function Thing()
 {
@@ -22,11 +13,7 @@ function Thing()
 	t.sprite	= null;		// ivank
 	t.body		= null;		// box2d
 
-	t.remove = function()
-	{
-		//box2d.removeChild( body );
-		//stage.removeChild( sprite );
-	}
+
 	t.update = function()
 	{
 		if (t.body)
@@ -135,6 +122,7 @@ function Thing()
 		t.sprite = new Sprite();
 
 		var g = t.sprite.graphics;
+		//var alpha = (name=='tree')?0.01:1;
 		g.beginFill(t.clr);
 		g.drawCircle(0, 0, t.radius * g_ivankRatio);
 
@@ -215,6 +203,7 @@ function Thing()
 		bodyDef.type = b2Body.b2_staticBody;
 		circle.m_radius = 0.00001;
 		fixDef.shape = circle;
+		fixDef.isSensor = true;
 
 		var body = g_box2d.CreateBody(bodyDef);
 		body.CreateFixture(fixDef);

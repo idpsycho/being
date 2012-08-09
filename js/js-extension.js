@@ -31,6 +31,14 @@ function notDef()
 
 	return true;	// all was undefined
 }
+// x = def(x, 5);
+function def(value, default_value)
+{
+	if (typeof value == 'undefined')
+		return default_value;
+
+	return value;
+}
 
 ///////////////////////////////////////////////////////
 // Array

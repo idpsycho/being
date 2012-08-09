@@ -27,12 +27,13 @@ ivank_drawText = function(stage, s, x, y, clr)
 function DebugLayer(stage, applyRatio)
 {
 	var t=this;
-	var dbg, dbgStage;
+	var g, dbgStage;
 	var ivankRatio = applyRatio ? g_ivankRatio : 1;
 
 	dbgStage = new Sprite();
 	stage.addChild(dbgStage);
-	dbg = dbgStage.graphics;
+	g = dbgStage.graphics;
+	t.g = g;
 
 
 	t.onFrame = function()
@@ -46,7 +47,7 @@ function DebugLayer(stage, applyRatio)
 
 	function removeDebugGraphics()
 	{
-		if (dbg) dbg.clear();					// lines, circles
+		if (g) g.clear();					// lines, circles
 		while (dbgStage.children.length)	// texts
 			dbgStage.removeChildAt(0);
 	}
@@ -62,9 +63,9 @@ function DebugLayer(stage, applyRatio)
 		y2 *= ivankRatio;
 		//w *= ivankRatio;
 
-		dbg.lineStyle(w, clr);
-		dbg.moveTo(x, y);
-		dbg.lineTo(x2, y2);
+		g.lineStyle(w, clr);
+		g.moveTo(x, y);
+		g.lineTo(x2, y2);
 	}
 
 	t.drawText = function(s, x, y, clr)
