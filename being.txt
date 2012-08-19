@@ -1,3 +1,21 @@
+@ blabla
+dokazovanie niecoho niekomu
+nieco za nieco, kazdy mi nieco da, a nieco za to chce
+mozno by som mal robit veci, ktorymi sa chcem chvalit ludom - udrzalo by ma to pri aktivite, a nepustal by som sa do veci ktore nejdu spravit, kedze tymi by som sa nepochvalil
+hlboky les, v ktorom neviem co je
+musi tam byt nieco, co nebudem vediet co je, aby ma to zaujalo niecim svojskym
+akoze sposobom zivota
+sposobom pohybu (opatrnost, pokojnost, aktivnost)
+sposobom stravy (setrenie, vyberavost)
+sposobom interakcie (priatelskost, strach, ignore)
+ako zije bakteria?
+ide za jedlom
+uteka pri iritacii, vracia sa k jedlu
+do veci chcem pridavat vselijake featury
+chodenie, nutricie+jedenie, utocenie, zivot a zomieranie, potom nejake to riadenie, zacat asi treba od najprvsieho, postupne sa mozu pridavat rozne logicke prvky
+
+
+
 @ to do
 	@ player looking towards mouse
 	player.angle = (mouseScr - g_cam.toScreen(player.pos)).getAngle()

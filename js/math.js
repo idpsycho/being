@@ -41,6 +41,15 @@ function calcFpsFromDt(dt)
 // - and get fps average few times per second to avoid unreadable numbers
 
 
+///////////////////////////////////////////////////////
+
+// geometry stuff
+function doCirclesIntersect(p1, r1, p2, r2)
+{
+	return v2isCloserThan(p1, p2, r1+r2);
+}
+
+
 
 ////////////////////////////////////////////////////////
 // MIN and MAX
@@ -270,6 +279,13 @@ function toDeg(rad) { return deg * inDegs; }
 // v2multMe(d, 2)
 // v2normMe(d)
 
+function vxy(x, y)
+{
+	if (typeof x.x!='undefined')
+		return v2c(x);	// should be vector
+	return v2(x, y);
+}
+
 function v2(x, y)		{ return {x:x,			y:y}; }
 function v2c(v)			{ return {x:v.x,		y:v.y}; }
 function v2copy(v)		{ return {x:v.x,		y:v.y}; }
@@ -382,13 +398,10 @@ function v2normMe(v)
 // box2d vector
 
 function b2null() { return new b2Vec2(0, 0); }
-function b2v(v, y)
+function b2v(x, y)
 {
-	if (!Box2D) return;
 	var b2Vec2 = Box2D.Common.Math.b2Vec2;
 
-	if (notDef(y))
-		return new b2Vec2(v.x, v.y);
-	else
-		return new b2Vec2(v, y);
+	var v = vxy(x, y);
+	return new b2Vec2(v.x, v.y);
 }

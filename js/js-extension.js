@@ -1,6 +1,24 @@
 // extending basic javascript objects and some functionality
 
 
+function assert()
+{
+	var args = arguments;
+	var last = args.length-1;
+	var msg = args[last];
+
+	for (var i=0; i < last; i++)
+	{
+		if (typeof args[i] == 'undefined')
+			console.log('Assert Failed: '+msg);
+	}
+}
+
+function clone(x)
+{
+	// requires jquery to use this..
+	return $.extend(true, {}, x);
+}
 
 ////////////////////////////////////////////////////////
 // milliseconds since X
@@ -31,8 +49,8 @@ function notDef()
 
 	return true;	// all was undefined
 }
-// x = def(x, 5);
-function def(value, default_value)
+// x = defined(x, 5);
+function defined(value, default_value)
 {
 	if (typeof value == 'undefined')
 		return default_value;
@@ -65,7 +83,14 @@ Array.prototype.removeObj = function(obj)	// must be exactly the same object
 			return this.splice(i, 1);
 	}
 }
-
+Array.prototype.findByAttr = function(name, value)
+{
+	for (var i=0; i < this.length; i++)
+	{
+		if (this[i][name] == value)
+			return this[i];
+	}
+}
 
 
 //////////////////////////////////////////////////////
@@ -117,7 +142,7 @@ function err(s, ret)
 {
 	var now = time();
 	if (err_lastTime && now-err_lastTime>100)
-		console.log(s);
+		out(s);
 
 	err_lastTime = now;
 	return ret;

@@ -16,7 +16,7 @@ function Camera()
 	var t		= this;
 	t.pos		= v2(0, 0);		// centered on screen
 	t.zoom		= 1;
-	t.lockedOn	= null;	// .pos, or .x .y
+	t.lockedOn	= null;	// array of objects with (.pos, or .x .y) inside
 	t.w			= 800;	// screen width
 	t.h			= 480;	// and height
 
@@ -45,18 +45,39 @@ function Camera()
 	t.updateLocking = function()
 	{
 		if (!t.lockedOn) return;
-		var o = t.lockedOn;
+		if (!(t.lockedOn instanceof Array))
+			t.lockedOn = [t.lockedOn];
 
-		// setPos could be goTowardsPos() for smoothness
+		function getPos(o) {
+			if (isDef(o.x, o.y))							return v2(o.x, o.y);
+			if (isDef(o.pos) && isDef(o.pos.x, o.pos.y) )	return v2c(o.pos);
+			console.log('fuu' + wtf_pos);
 
-		var vTarget;
-		if (isDef(o.x, o.y))
-			vTarget = v2(o.x, o.y);
+		}
 
-		if ( isDef(o.pos) && isDef(o.pos.x, o.pos.y) )
-			vTarget = v2c(o.pos);
+		var vCenter = v2null();
+		var num = 0;
+		for (var i=0; i < t.lockedOn.length; i++)
+		{
+			var o = t.lockedOn[i];
+			if (!o) continue;
+			num++;
+			var p = getPos(o);
+			v2addMe(vCenter, p);
+		}
+		v2divMe(vCenter, num);
+		t.leapTo(vCenter, 0.05);
+		if (num<=1) return;
 
-		t.leapTo(vTarget, 0.05);
+		var maxDist = 1;
+		for (var i=0; i < t.lockedOn.length; i++)
+		{
+			var o = t.lockedOn[i];
+			if (!o) continue;
+			var d = v2dist(vCenter, getPos(o));
+			maxDist = max(maxDist, d);
+		}
+		t.setZoom( minmax(4/maxDist, 0.1, 1) );
 	}
 	t.leapTo = function(v, f01)
 	{
@@ -81,7 +102,7 @@ function Camera()
 		if (v=='rt') v = v2(f, 0);
 		t.setPos( v2add(t.pos, v) );
 	}
-	t.lockTo = function(obj){ t.lockedOn = obj; }
+	t.lockTo = function(obj, obj2){ t.lockedOn = [obj, obj2] }
 	t.unlock = function()	{ t.lockedOn = null; }
 	t.setZoom = function(f)	{ t.zoom = f; }
 	t.zoomIn = function(f)	{ if (!f) f = 1.05; t.setZoom(t.zoom * f); }

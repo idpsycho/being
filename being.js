@@ -11,17 +11,21 @@ require([
 	'js/math',
 	'js/input',
 	'js/camera',
+	'js/parts',
+	'js/thing',
 	'js/things',
 
 ], initBeing);
 
 var g_ikStage;
 var g_ikWorld;
+var g_ikLayers = {};
 var g_cam;
 var g_box2d;
 var g_arrThings = [];
 var g_dt;
 var g_player;
+var g_player2;
 var dbg;	// world-space debug
 var gui;	// screen-space debug
 var arrErrors = [];
@@ -29,13 +33,13 @@ var arrErrors = [];
 
 function loadWorld(s)
 {
-	g_cam.setZoom(0.5);
+	g_cam.setZoom(1);
 
 	g_player = addThing('human', 0, 0);
 	g_cam.lockTo(g_player);
 
 	addThingN(3, 'animal');
-	addThingN(100, 'tree');
+	addThingN(111, 'tree');
 }
 function addThingN(n, name)
 {
@@ -158,23 +162,23 @@ function processInputs()
 	if (kd('NUM+')) g_cam.zoomIn();
 	if (kd('NUM-')) g_cam.zoomOut();
 
-	if (0)
-	{
-		if (kd('UP,W')) g_cam.move('up');
-		if (kd('DN,S')) g_cam.move('dn');
-		if (kd('LT,A')) g_cam.move('lt');
-		if (kd('RT,D')) g_cam.move('rt');
-	}
-	else
 	if (g_player)
 	{
-		if (kd('UP,W')) g_player.action('up');
-		if (kd('DN,S')) g_player.action('dn');
-		if (kd('LT,A')) g_player.action('lt');
-		if (kd('RT,D')) g_player.action('rt');
+		if (kd('UP,W')) g_player.move('up');
+		if (kd('DN,S')) g_player.move('dn');
+		if (kd('LT,A')) g_player.move('lt');
+		if (kd('RT,D')) g_player.move('rt');
+	}
 
-		if (kd('UP,DN,LT,RT,W,A,S,D'))
-			g_cam.lockTo(g_player);
+	if (kd('UP,DN,LT,RT,W,A,S,D'))
+	{
+		if (g_player && g_player.pos)
+		{
+			var v = v2add(g_player.pos, v2rnd(g_player.radius/2));
+			//if (!rndi(3)) addThing('blood', v.x, v.y);
+		}
+
+		g_cam.lockTo(g_player);
 	}
 
 	//if (kp('C')) lockCam = !lockCam;
@@ -200,7 +204,7 @@ function initBeing()
 	g_cam = getCamera();
 	onRESIZE();	// it has init stuff in it
 	initBox2d();
-	g_cam.setZoom(0.5);
+	//g_cam.setZoom(1);
 
 	bindOnMouseWheel( g_cam.zoomWheel );
 
@@ -217,6 +221,18 @@ function initBox2d()
 	g_box2d.Step(1/60, 6, 2);
 }
 
+function ikAddLayer(name)
+{
+	var layer = new Sprite();
+	g_ikWorld.addChild(layer);
+	g_ikLayers[name] = layer;
+}
+function ikGetLayer(name)
+{
+	var l = g_ikLayers[name];
+	return l ? l : g_ikLayers['world'];
+}
+
 function initIvank()
 {
 	// STAGE = WORLD + GUI
@@ -229,9 +245,14 @@ function initIvank()
 	ikBg = new Sprite();	// see onRESIZE
 	g_ikStage.addChild(ikBg);
 
-	// WORLD LAYER
+	// WORLD and LAYERS
 	g_ikWorld = new Sprite();
 	g_ikStage.addChild(g_ikWorld);
+
+	ikAddLayer('ground');
+	ikAddLayer('world');
+	ikAddLayer('trees');
+	ikAddLayer('sky');
 
 	// DEBUG LAYER
 	dbg = new DebugLayer(g_ikWorld, 'apply ratio');
