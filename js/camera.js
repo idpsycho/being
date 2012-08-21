@@ -25,13 +25,6 @@ function Camera()
 		t.w = w;
 		t.h = h;
 	}
-	t.reset = function()
-	{
-		t.pos = v2(0, 0);
-		t.zoom = 1;
-
-		// apply??
-	}
 	t.updateWorld = function(ikWorld)
 	{
 		t.updateLocking();
@@ -41,6 +34,22 @@ function Camera()
 
 		ikWorld.x = t.w/2 - t.pos.x * t.zoom * g_ivankRatio;
 		ikWorld.y = t.h/2 - t.pos.y * t.zoom * g_ivankRatio;
+	}
+	t.fromScreen = function(x, y)
+	{
+		var v = vxy(x, y);
+		var z = t.zoom * g_ivankRatio;
+		var x = (v.x-t.w/2)/z + t.pos.x;
+		var y = (v.y-t.h/2)/z + t.pos.y;
+		return v2(x, y);
+	}
+	t.toScreen = function(x,y)
+	{
+		var v = vxy(x, y);
+		var z = t.zoom * g_ivankRatio;
+		var x = (v.x - t.pos.x)*z + t.w/2;
+		var y = (v.y - t.pos.y)*z + t.h/2;
+		return v2(x, y);
 	}
 	t.updateLocking = function()
 	{
@@ -109,18 +118,6 @@ function Camera()
 	t.zoomOut = function(f)	{ if (!f) f = 1.05; t.setZoom(t.zoom / f); }
 	t.zoomWheel = function(d) { d>0 ? t.zoomIn() : t.zoomOut(); }
 
-	t.fromScreen = function(v)
-	{
-		var x = (v.x-t.w/2)/t.zoom + t.pos.x;
-		var y = (v.y-t.h/2)/t.zoom + t.pos.y;
-		return v2(x, y);
-	}
-	t.toScreen = function(v)
-	{
-		var x = (v.x - t.pos.x)*t.zoom + t.w/2;
-		var y = (v.y - t.pos.y)*t.zoom + t.h/2;
-		return v2(x, y);
-	}
 	t.screenDrag = function(scrPixels)
 	{
 		var v = v2m(scrPixels, -1/t.zoom/g_ivankRatio);
@@ -149,4 +146,25 @@ function getScreenAABB(reserveRatio)
 	return {mn:mn, mx:mx};
 }
 
+*/
+/*
+if ('test screen-world conversion')
+{
+	gui.drawText('100', 100, 100);
+	var v = g_cam.fromScreen(v2(100, 100));
+	dbg.drawText('100', v.x, v.y);
+	dbg.drawText('  ..xx', 4, 2);
+
+	var s = mouseScr;
+	var p = mousePos;
+	var sx = g_cam.toScreen(p);
+	var px = g_cam.fromScreen(s);
+
+	gui.drawText(nice(s)+' S', s.x-150, s.y-20);
+	gui.drawText(nice(p)+' W', s.x-150, s.y);
+	//gui.drawText(nice(px)+'SX', sx.x+50, sx.y);
+
+	dbg.drawText('P', p.x, p.y);
+	dbg.drawText('..  PX', px.x, px.y);
+}
 */

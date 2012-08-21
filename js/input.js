@@ -52,7 +52,7 @@ function inputAfterFrame()
 	mousePosLast = v2copy(mousePos);
 
 	mouseScr = v2copy(mouseScrNew);
-	mousePos = v2copy(mousePosNew);
+	mousePos = getCamera().fromScreen(mouseScr);
 
 	mouseScrChange = v2sub(mouseScr, mouseScrLast);
 	mousePosChange = v2sub(mousePos, mousePosLast);
@@ -164,7 +164,6 @@ function onMouseMove(e)
 
 	// this will be aplied in inputAfterFrame()
 	mouseScrNew = v2(t.mouseX, t.mouseY);
-	mousePosNew = getCamera().fromScreen(mouseScrNew);
 }
 /*
 	i dont relly remember what's this for
@@ -178,13 +177,22 @@ function onMouseMove(e)
 	mouseScr = v2multV( v2sub(m, of), v2divV(w, c) );
 */
 
-
+function toCharCode(char)
+{
+	return char.charCodeAt(0);
+}
 // event testing page: http://javascript.info/tutorial/keyboard-events
 function getAlternativeCode(c)
 {
+	var _A = toCharCode('A');
+	var _Z = toCharCode('Z');
+	var _0 = toCharCode('0');
+	var _9 = toCharCode('9');
+
 	var ch = String.fromCharCode(c);
-	if (ch >= 'A' && ch <= 'Z' ||
-		ch >= '0' && ch <= '9')
+	//out('ch=',ch, '  c=',c);
+	if (c >= _A && c <= _Z ||
+		c >= _0 && c <= _9)
 		return ch;
 
 	if (c==106) return 'NUM*';

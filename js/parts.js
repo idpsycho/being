@@ -20,17 +20,30 @@ function PartCircle(def, thing)
 {
 	assert(def.clr, thing, 'Circle init');
 	var t = this;
+	t.thing = thing;
 
 	function init()
 	{
-		t.sprite = t.createSprite();
+		t.createSprite();
 	}
 
 	t.createSprite = function()
 	{
-		var sp = new Sprite();
+		t.sprite = new Sprite();
+
+		t.redrawSprite();
+
+		assert(thing && thing.sprite,
+				"parent must have sprite");
+
+		thing.sprite.addChild(t.sprite);
+	}
+	t.redrawSprite = function()
+	{
+		var sp = t.sprite;
 
 		var g = sp.graphics;
+		g.clear();
 		g.beginFill(def.clr);
 
 		var v = getDefPosition(def);
@@ -38,12 +51,13 @@ function PartCircle(def, thing)
 		var y = g_ivankRatio * v.y;
 		var r = g_ivankRatio * def.radius;
 		g.drawCircle(x, y, r);
+	}
+	t.setColor = function(clr)
+	{
+		clr = normalizeClr(clr);
+		def.clr = clr;
 
-		assert(thing && thing.sprite,
-				"parent must have sprite");
-
-		thing.sprite.addChild(sp);
-		return sp;
+		t.redrawSprite();
 	}
 
 	t.update = function()
@@ -58,10 +72,12 @@ function PartCircle(def, thing)
 function PartBody(def, thing)	// def: radius, density
 {
 	var t = this;
+	t.thing = thing;
 
 	function init()
 	{
 		t.body = createBox2dCircle(def.radius, def.density, def.damping);
+		t.body.SetUserData(t);
 	}
 
 	t.update = function()
@@ -73,9 +89,13 @@ function PartBody(def, thing)	// def: radius, density
 		thing.rot = t.body.GetAngle()*inDegs;
 	}
 
-	t.posChanged = function(v)
+	t.posChanged = function(v, r)
 	{
-		t.body.SetPosition( b2v(v) );
+		if (isDef(v))
+			t.body.SetPosition( b2v(v) );
+
+		if (isDef(r))
+			t.body.SetAngle( r*inRads );
 	}
 
 	////////////////////////////////////////////////////////////
@@ -107,7 +127,7 @@ function PartBody(def, thing)	// def: radius, density
 		body.CreateFixture(fixDef);
 		body.SetLinearDamping( damping );
 		body.SetAngularDamping( damping );
-		body.SetAngle( rnd(360) );
+		//body.SetAngle( rnd(360)*inRads );
 
 		return body;
 	}
@@ -118,49 +138,84 @@ function PartBody(def, thing)	// def: radius, density
 function PartControl(def, thing)
 {
 	var t = this;
+	t.thing = thing;
+
+	t.maxSpeed = 3;
+	t.maxRot = 25;
 
 	t.update = function()
 	{
 		var partBody = thing.body;
-		if (!partBody) return;
-		var b = partBody.body;
+		var b = thing.body ? thing.body.body : null;
 
+		if (t.moveBy)	t.updatePosition(b);
+		if (t.turnTo)	t.updateDirection(b);
+
+		t.moveBy = null;
+		t.turnTo = null;
+	}
+
+	t.updatePosition = function(b)
+	{
 		if (!b)
 		{
-			thing.addPos( t.currAction );
-			//v2addMe( thing.pos, t.currAction );
+			thing.addPos( t.moveBy );
 		}
 		else
 		{
-			b.SetLinearDamping(7);
-			if (!t.currAction) return;
+			v2multMe(t.moveBy, 1);
+			b.ApplyImpulse( b2v(t.moveBy), b.GetWorldCenter() );
 
-			v2multMe(t.currAction, 1);
-			b.ApplyImpulse( b2v(t.currAction), b.GetWorldCenter() );
-
-			t.limitSpeed(3);
+			t.limitSpeed();
 		}
-
-		t.currAction = null;
 	}
-	t.limitSpeed = function(maxSpeed)
+	t.updateDirection = function(b)
+	{
+		if (!b)
+		{
+			thing.setRot( t.turnTo );
+		}
+		else
+		{
+			var ang = b.GetAngle()*inDegs;
+			var diff = t.turnTo - ang;
+			diff = cycleIn(diff, -180, 180);
+
+			diff *= 0.2;
+			diff = absmin(diff, t.maxRot);
+
+			b.SetAngle( (ang+diff)*inRads );
+		}
+	}
+
+	t.limitSpeed = function()
 	{
 		var partBody = thing.body;
 		if (!partBody) return;
 		var b = partBody.body;
 
+		var mx = t.maxSpeed;
 		var vel = b.GetLinearVelocity();
 		var len = v2len(vel);
-		if (len > maxSpeed)
-			v2multMe(vel, maxSpeed/len);
+		if (len > mx)
+			v2multMe(vel, mx/len);
 
 		b.SetLinearVelocity(vel);
 	}
 
-	t.move = function(v)
+	t.turn = function(degs, spd)
 	{
-		if (!t.currAction)
-			t.currAction = v2null();
+		t.turnTo = degs;
+
+		if (spd) t.rotSpeed = spd;
+	}
+
+	t.move = function(v, spd)
+	{
+		if (!t.moveBy)
+			t.moveBy = v2null();
+
+		t.maxSpeed = defined(spd, 3);
 
 		if (typeof v == 'string')
 		{
@@ -171,7 +226,7 @@ function PartControl(def, thing)
 			if (v == 'rt') v = v2(f, 0)
 		}
 
-		v2addMe(t.currAction, v);
+		v2addMe(t.moveBy, v);
 	}
 
 }
@@ -185,6 +240,7 @@ function PartControl(def, thing)
 function PartAnchor(def, thing)
 {
 	var t=this;
+	t.thing = thing;
 
 	function init()
 	{
@@ -192,6 +248,8 @@ function PartAnchor(def, thing)
 
 		t.anchor = createBox2dStaticAnchor( def.radius*0.2 );
 		t.joint = createBox2dJoint(b, t.anchor, def.freq, def.damp);
+		t.anchor.SetUserData(t);
+
 		t.posChanged( thing.pos );
 
 		assert(t.anchor, 'anchor - body init')
@@ -243,4 +301,97 @@ function PartAnchor(def, thing)
 	}
 
 	init();
+}
+
+
+function PartNutrition(def, thing)
+{
+	var t=this;
+	t.thing = thing;
+
+	t.max = 100;
+	t.now = 50;
+
+	t.burnIdle = 0.1/60;
+	t.burnActive = 0.8/60;
+
+	t.update = function()
+	{
+		t.now -= t.burnIdle;
+		t.now -= t.burnActive * thing.getSpeed();
+		//out(t.now);
+	}
+	t.eat = function(amount)
+	{
+		t.now -= amount;
+	}
+	t.getNutrition01 = function()
+	{
+		var f = rangeUnit(t.now, t.max);
+		return minmax(f, 0, 1);
+	}
+}
+
+function PartAI(def, thing)
+{
+	var t=this;
+	t.thing = thing;
+
+	t.nextT = 0;
+	t.action = 'idle';
+
+	t.update = function()
+	{
+		// treba sa obzerat okolo za vsetkymi ruchmi (predatory, praskania konarov)
+		// zatial len simulacia
+		var nowT = time();
+		if (t.nextT > nowT)
+		{
+			if (t.action)
+				t.doAction();
+			return;
+		}
+
+		// decide action
+		t.nextT = nowT + 1000;//rnd(500, 5000);
+
+		t.action = 'go';
+	}
+
+	t.doAction = function()
+	{
+		if (!t.to) {
+			t.to = rndi(7) ? v2rndxy(40, 20) : g_player;
+
+			if (t.to==g_player)
+			t.thing.doWith('eye', function(eye) {
+				eye.circle.setColor('f11');
+			});
+		}
+
+		thing.turn( v2angle(thing.getVel()) );
+
+		var B = t.to==g_player;
+		var maxSpeed = 1;
+		var fr = thing.pos;
+		var to;
+		if (B)
+		{
+			to = g_player.pos;
+			maxSpeed = 3.1;
+		}
+		else
+			to = t.to;
+
+		thing.move( v2dirTo(fr, to), maxSpeed );
+		if (v2dist(fr, to) < thing.radius*2)
+		{
+			if (B) t.thing.doWith('eye', function(eye) {
+					eye.circle.setColor('fff');
+				});
+			t.to = null;
+			t.action = null;
+		}
+	}
+
 }

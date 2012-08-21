@@ -25,7 +25,6 @@ var g_box2d;
 var g_arrThings = [];
 var g_dt;
 var g_player;
-var g_player2;
 var dbg;	// world-space debug
 var gui;	// screen-space debug
 var arrErrors = [];
@@ -33,13 +32,13 @@ var arrErrors = [];
 
 function loadWorld(s)
 {
-	g_cam.setZoom(1);
+	//g_cam.setZoom(1);
 
 	g_player = addThing('human', 0, 0);
 	g_cam.lockTo(g_player);
 
-	addThingN(3, 'animal');
-	addThingN(111, 'tree');
+	addThingN(13, 'animal');
+	addThingN(70, 'tree');
 }
 function addThingN(n, name)
 {
@@ -47,7 +46,7 @@ function addThingN(n, name)
 }
 function addThing(name, x, y)
 {
-	var m = 3 / g_ivankRatio * 0.7;
+	var m = 3 / g_ivankRatio * 0.6;
 	var w = m * g_ikStage.stageWidth;
 	var h = m * g_ikStage.stageHeight;
 
@@ -90,6 +89,8 @@ function drawNewDebugTexts()
 	//var p = g_player.pos;
 	//var vel = g_player.body.GetLinearVelocity();
 	//dbg.drawText(nice(vel), p.x, p.y);
+
+	//gui.drawText('n='+g_box2d.GetBodyCount()+' j='+g_box2d.GetJointCount()+' c='+g_box2d.GetContactCount());
 }
 
 
@@ -135,6 +136,7 @@ function onEnterFrame()
 
 	inputAfterFrame();
 
+	drawPlayerGui();
 	drawConsoleErrors();
 }
 
@@ -150,11 +152,123 @@ function drawConsoleErrors()
 	});
 }
 
+function drawPlayerGui()
+{
+	if (!g_player) return;
+
+	sw = g_ikStage.stageWidth;
+	sh = g_ikStage.stageHeight;
+	w = -sw*0.2;
+	h = -20;
+	x = sw - sw*0.05;
+	y = sh - sh*0.05;
+
+	var n = g_player.nutrition;
+	if (!n) return;
+
+	var b = 1;	// border
+	var f01 = n.getNutrition01();
+	gui.drawRect(x+b, y+b, w-b*2, h-b*2, 0x331100);
+	gui.drawRect(x, y, w*f01, h, 0xc26d31);
+	//out(f01);
+}
+
 function processMouse()
 {
 	if (kd('SPACE'))
 		g_cam.screenDrag(mouseScrChange);
+
+	if (g_player)
+	{
+		// VIEWING ANGLE
+		var v = v2sub(mousePos, g_player.pos);
+		var lookAng = v2angle(v);
+
+		var diffAng = lookAng - g_player.rot;
+		diffAng = cycleIn(diffAng, -180, 180);
+
+		// par stupnov sa natocia oci, zvysok cela bytost
+		var eyeAng = absmin(diffAng, 45);
+
+		//gui.drawText( nice(eyeAng, lookAng, diffAng) );
+		g_player.doWith('eye', function(eye) {
+			eye.setRot( eyeAng );
+		});
+
+		if (g_player.getSpeed() > 1.5)
+			eyeAng = 0;
+		g_player.turn( lookAng-eyeAng );
+
+		//return;
+
+		// VIEW CONE
+		var fov = 100;
+		var dist = 15;
+		var v1 = g_player.pos;
+		var r = lookAng;
+		var viewCone = createFovShape(v1, r, fov, dist);
+
+		var num = 0;
+		g_box2d.QueryShape(function(e)
+		{
+			num++;
+			var data = e.GetBody().GetUserData();
+			if (data)
+			{
+				var p = data.thing.pos;
+				var scr = g_cam.toScreen(p);
+				//dbg.drawLine(v1.x, v1.y, p.x, p.y, 'fff');
+			}
+			return true;
+		}, viewCone, null);
+
+		//dbg.drawText(num, g_player.pos.x+0.5, g_player.pos.y);
+
+
+	}
+
 }
+	// TODO HODIT NIEKAM
+	function createFovShape(p1, rot, fov, dist)
+	{
+		var arr = [ v2(0, 0) ];
+
+		// - scale sides (so that far point is at DIST, but sides are further)
+		if ('cone')
+		{
+			forRangeSteps(-fov/2, fov/2, 3, function(val)
+			{
+				var vF = v2fromAngle(rot, dist);
+				var p = v2rot(vF, val);
+				arr.push( p );
+			});
+		}
+		else
+		// make polygon round, its more points, but its realistic cone
+		{
+			// scale distance, so that far point stays exactly away
+			// (this actually scales vectors of side-boundaries)
+			dist /= Math.cos(fov/2*inRads);
+
+			var vF = v2fromAngle(rot, dist);
+			var p2 = v2rot(vF, -fov/2);
+			var p3 = v2rot(vF, fov/2);
+
+			arr.push( p2 );
+			arr.push( p3 );
+		}
+
+		for (var i=0; i < arr.length; i++)
+			v2addMe( arr[i], p1 );
+
+		//dbg.drawPoly(arr, 0, 2);
+
+		var b2PolygonShape	= Box2D.Collision.Shapes.b2PolygonShape;
+		var sh = new b2PolygonShape();
+		sh.SetAsArray( b2vArr(arr), arr.length );
+
+		return sh;
+	}
 
 function processInputs()
 {
@@ -164,11 +278,14 @@ function processInputs()
 
 	if (g_player)
 	{
-		if (kd('UP,W')) g_player.move('up');
-		if (kd('DN,S')) g_player.move('dn');
-		if (kd('LT,A')) g_player.move('lt');
-		if (kd('RT,D')) g_player.move('rt');
+		var spd = kd('SHIFT') ? 1 : 3;
+		if (kd('UP,W')) g_player.move('up', spd);
+		if (kd('DN,S')) g_player.move('dn', spd);
+		if (kd('LT,A')) g_player.move('lt', spd);
+		if (kd('RT,D')) g_player.move('rt', spd);
 	}
+
+	//out( kd('SHIFT')?1:0 );
 
 	if (kd('UP,DN,LT,RT,W,A,S,D'))
 	{

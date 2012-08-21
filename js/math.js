@@ -87,12 +87,24 @@ function minmaxFix(f, mn, mx)
 
 // absmin(-5, 3) => 3		// returns number that is closer to zero
 // absmax(-5, 3) => -5		// returns number that is further from zero
-function absmin(a, b) { assert(b >= 0); return sign(a) * min( abs(a), b ); }
-function absmax(a, b) { assert(b >= 0); return sign(a) * max( abs(a), b ); }
+function absmin(a, b) { assert(b >= 0); return sign(a) * min( abs(a), abs(b) ); }
+function absmax(a, b) { assert(b >= 0); return sign(a) * max( abs(a), abs(b) ); }
 // abspow(-2, 2) => (-2)^2*sign => -4	// returns pow, but with original sign
-function abspow(a, b) { assert(b >= 0); return sign(a) * pow( abs(a), b ); }
+function abspow(a, b) { assert(b >= 0); return sign(a) * pow( abs(a), abs(b) ); }
 
+// useful to get smallest angle.. btw its not safe, while might take forever..
+function cycleIn(f, from, to)
+{
+	var range = to-from;
 
+	// (-1000)-(-180)> || (1000-180)
+	if (f-from > -range*100 || f-to > range*100)
+		assert(0, 'uneffective cycling');
+
+	while (f < from)	f += range;
+	while (f > to)		f -= range;
+	return f;
+}
 
 ////////////////////////////////////////////////////////
 // math stuff
@@ -161,6 +173,12 @@ function rndi(x, mx)
 // !! though i'm not sure if it works properly right now, got to do some tests
 function rangeUnit(f, mn, mx)
 {
+	if (notDef(mx)) {
+		mx = mn;
+		mn = 0;
+	}
+	mx = defined(mx, 1);	// toto moc nedava zmysel, ze? naco by som si pytal range unit medzi 0-1 ?
+
 	return (f-mn) / (mx-mn);
 }
 function forRangeStepsLog(mn, mx, steps, fn)
@@ -178,13 +196,13 @@ function forRangeSteps(mn, mx, steps, fn, log)
 	if (steps > 1)
 		step = (mx-mn) / (steps-1);
 
-	for (var i=mn; i <= mx; i+=step)
+	for (var i=0; i < steps; i++)
 	{
-		var val = i;
+		var val = mn + i*step;
 		if (log)
 			val = powe(val);
 
-		var ru = rangeUnit(i, mn, mx).toFixed(4);
+		var ru = rangeUnit(i, mx).toFixed(4);
 		var b = fn(val, ru);
 		if (b == false || !step)
 			break;
@@ -338,6 +356,23 @@ function v2avg()
 	v2divMe(v, num);
 	return v;
 }
+function v2angle(v)
+{
+	return Math.atan2(v.y, v.x) * inDegs;
+}
+function v2angle2(a, b)
+{
+	var v = v2dirTo(a, b);
+	return Math.atan2(v.y, v.x) * inDegs;
+}
+function v2fromAngle(degs, dist)
+{
+	dist = defined(dist, 1);
+
+	var v = v2(1, 0);
+	v = v2rot(v, degs);
+	return v2mult(v, dist);
+}
 function v2rot(v, ang)
 {
 	var rad = toRad(ang);
@@ -404,4 +439,13 @@ function b2v(x, y)
 
 	var v = vxy(x, y);
 	return new b2Vec2(v.x, v.y);
+}
+function b2vArr(arr)
+{
+	var b2arr = [];
+	for (var i=0; i < arr.length; i++)
+	{
+		b2arr.push( b2v(arr[i]) );
+	}
+	return b2arr;
 }

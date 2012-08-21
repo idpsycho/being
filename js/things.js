@@ -5,10 +5,11 @@ require([
 
 /*
 possible todo:
-- radius pod-objektov by mal byt pomerovy k parent radiusu
-
-- nutrition + eat, etc
-- simple ai
+- zviera bude utekat od cloveka
+- vrazdit sa bude dat klikanim zblizka na zviera
+- jest sa bude dat kliknutim na mrtve zviera
+- viditelny uhol
+- prepinat farby a poslednu poziciu objektom podla viditelnosti
 
 */
 
@@ -32,6 +33,7 @@ var arrThingsDef =
 			{ name: 'circle', clr: 0xf2cba4 },
 			{ name: 'body', density: 1 },
 			{ name: 'control' },
+			{ name: 'nutrition' },
 		],
 		things: [
 			{ name: 'eyes' },
@@ -43,6 +45,8 @@ var arrThingsDef =
 		parts: [
 			{ name: 'circle', clr: 0xc26d31 },
 			{ name: 'body', density: 1 },
+			{ name: 'control' },
+			{ name: 'ai' },
 		],
 		things: [
 			{ name: 'eyes' },
@@ -60,14 +64,14 @@ var arrThingsDef =
 	{
 		name:		'eyes',
 		things: [
-			{ name: 'eye', x: -0.2 },
-			{ name: 'eye', x: 0.2 },
+			{ name: 'eye', y: -0.3 },
+			{ name: 'eye', y: 0.3 },
 		],
 	},
 	{
 		name:		'eye',
-		radius:		0.1,
-		y:			0.7,
+		radius:		0.15,
+		x:			0.7,
 		parts: [
 			{ name: 'circle', clr: 0xffffff },
 		],
@@ -78,7 +82,7 @@ var arrThingsDef =
 	{
 		name:		'eye-inner',
 		radius:		0.5,
-		y:			0.5,
+		x:			0.4,
 		parts: [
 			{ name: 'circle', clr: 0x000000 },
 		],

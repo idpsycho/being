@@ -21,12 +21,6 @@ function clone(x)
 }
 
 ////////////////////////////////////////////////////////
-// milliseconds since X
-function time()
-{
-	return new Date().getTime();
-}
-
 function isDef()
 {
 	if (arguments.length == 1)
@@ -57,6 +51,30 @@ function defined(value, default_value)
 
 	return value;
 }
+
+//////////////////////////////////////////////////////
+
+// milliseconds since X
+function time()
+{
+	return new Date().getTime();
+}
+
+function sinT01(fps, mult)
+{
+	var x = sinT(fps)/2 + 0.5;
+	return x * mult;
+}
+
+function sinT(fps, mult)
+{
+	mult = defined(mult, 1);
+	fps = defined(fps, 1);
+
+	var t = time()*fps/1000;
+	return Math.sin(t) * mult;
+}
+
 
 ///////////////////////////////////////////////////////
 // Array
@@ -92,6 +110,29 @@ Array.prototype.findByAttr = function(name, value)
 	}
 }
 
+/* TEST:
+var arr = [{i:0,w:5}, {i:1,w:1}, {i:2,w:2}]; hits=[0, 0, 0]; var q=99999; while(q--) hits[arr.weightedRnd().i]++; hits;
+*/
+Array.prototype.weightedRnd = function(weight_name)
+{
+	var w = defined(weight_name, 'w');
+	var sum = 0;
+	for (var i=0; i < this.length; i++)
+	{
+		sum += this[i][w];
+	}
+
+	var at = rndi( sum );
+	for (var i=0; i < this.length; i++)
+	{
+		at -= this[i][w];
+		if (at < 0)
+			return this[i];
+	}
+
+	assert('something went wrong..');
+	return this[0];
+}
 
 //////////////////////////////////////////////////////
 // String
@@ -186,6 +227,12 @@ function out()
 	{
 		var a = arguments[i];
 
+		if (notDef(a))
+			s += 'undefined';
+		else
+		if (a === null)
+			s += 'null';
+		else
 		if (isDef(a.x, a.y))
 			s += nice(a.x)+' '+nice(a.y);
 		else

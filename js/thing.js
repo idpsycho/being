@@ -15,7 +15,7 @@ function Thing(def, parent)
 	t.parent	= parent;
 
 	t.pos		= v2null();
-	t.rot		= rnd11(50);
+	t.rot		= 0;//rnd11(50);
 	t.radius	= def.radius;
 	t.sprite	= null;
 	t.things	= [];
@@ -27,6 +27,8 @@ function Thing(def, parent)
 		t.control	= addPart('control', PartControl);
 		t.anchor	= addPart('anchor', PartAnchor);
 		t.circle	= addPart('circle', PartCircle);
+		t.nutrition	= addPart('nutrition', PartNutrition);
+		t.ai		= addPart('ai', PartAI);
 
 		addThings(def.things);
 
@@ -72,6 +74,8 @@ function Thing(def, parent)
 
 		if (t.control)	t.control.update();
 		if (t.circle)	t.circle.update();
+		if (t.nutrition)t.nutrition.update();
+		if (t.ai)		t.ai.update();
 
 		for (var i=0; i < t.things.length; i++)
 			t.things[i].update();
@@ -97,6 +101,35 @@ function Thing(def, parent)
 
 	///////////////////////////////////////////////////
 	// interface
+	t.getThing = function(name)
+	{
+		var arr = [];
+		for (var i=0; i < t.things.length; i++)
+		{
+			var th = t.things[i];
+			if (th.name == name)
+				arr.push(th);
+
+			arr.append( th.getThing(name) );
+		}
+		return arr;
+	}
+	t.doWith = function(name, fn)
+	{
+		var arr = t.getThing(name);
+
+		for (var i=0; i < arr.length; i++)
+			fn( arr[i] );
+	}
+	t.getVel = function()
+	{
+		if (!t.body) return v2null();
+		return t.body.body.GetLinearVelocity();
+	}
+	t.getSpeed = function()
+	{
+		return v2len( t.getVel() );
+	}
 	t.addPos = function(v)
 	{
 		t.setPos( v2add(t.pos, v) );
@@ -109,10 +142,19 @@ function Thing(def, parent)
 		if (t.body)		t.body.posChanged(v);
 		if (t.anchor)	t.anchor.posChanged(v);
 	}
-
-	t.move = function(v)
+	t.setRot = function(r)
 	{
-		if (t.control)	t.control.move(v);
+		var pos;
+		t.rot = r;
+		if (t.body)		t.body.posChanged(pos, r);
+	}
+	t.move = function(v, spd)
+	{
+		if (t.control)	t.control.move(v, spd);
+	}
+	t.turn = function(degs, spd)
+	{
+		if (t.control)	t.control.turn(degs, spd);
 	}
 
 	t.addThing = function(name, defCustom)

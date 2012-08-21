@@ -19,8 +19,8 @@ ivank_drawText = function(stage, s, x, y, clr)
 	stage.addChild(t);
 
 	t.setText(s);
-	t.x = x;
-	t.y = y;
+	t.x = defined(x, 10);
+	t.y = defined(y, 10);
 }
 
 
@@ -34,7 +34,6 @@ function DebugLayer(stage, applyRatio)
 	stage.addChild(dbgStage);
 	g = dbgStage.graphics;
 	t.g = g;
-
 
 	t.onFrame = function()
 	{
@@ -67,23 +66,49 @@ function DebugLayer(stage, applyRatio)
 		g.moveTo(x, y);
 		g.lineTo(x2, y2);
 	}
+	t.drawPoly = function(arrPoints, clr, w)
+	{
+		var last = arrPoints.length-1;
+		for (var i=-1; i < arrPoints.length-1; i++)
+		{
+			var a = arrPoints[ i<0?last:i ];
+			var b = arrPoints[ i+1 ];
+			t.drawLine(a.x, a.y, b.x, b.y, clr, w);
+		}
+	}
 
 	t.drawText = function(s, x, y, clr)
 	{
 		var fontSize = 20;
+
+		x = defined(x, 10);
+		y = defined(y, 10);
+		x *= ivankRatio;
+		y *= ivankRatio;
+		//fontSize /= getCamera().zoom;
 
 		var t = new TextField();
 		clr = normalizeClr(clr);
 		t.setTextFormat( new TextFormat("Arial", fontSize, clr) );
 		dbgStage.addChild(t);
 
-		x *= ivankRatio;
-		y *= ivankRatio;
-
 		t.setText(s);
 		t.x = x;
 		t.y = y;
 	}
+	t.drawRect = function(x, y, w, h, clr, alpha)
+	{
+		_drawRect(x, y, w, h, clr, alpha);
+	}
+	function _drawRect(x, y, w, h, clr, alpha)
+	{
+		alpha = defined(alpha, 1);
+		clr = normalizeClr(clr);
+
+		g.beginFill(clr, alpha);
+		g.drawRect(x, y, w, h);
+	}
+
 
 	///////////////////////////////////
 	// debug drawing tools
