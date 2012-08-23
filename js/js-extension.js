@@ -59,6 +59,10 @@ function time()
 {
 	return new Date().getTime();
 }
+function ago(t)
+{
+	return time() - t;
+}
 
 function sinT01(fps, mult)
 {
@@ -109,6 +113,19 @@ Array.prototype.findByAttr = function(name, value)
 			return this[i];
 	}
 }
+Array.prototype.filterByAttr = function(name, value, ifNot)
+{
+	var arr = [];
+	for (var i=0; i < this.length; i++)
+	{
+		var b = (this[i][name] == value);
+		if (ifNot)
+			b = !b;
+		if (b)
+			arr.push(this[i]);
+	}
+	return arr;
+}
 
 /* TEST:
 var arr = [{i:0,w:5}, {i:1,w:1}, {i:2,w:2}]; hits=[0, 0, 0]; var q=99999; while(q--) hits[arr.weightedRnd().i]++; hits;
@@ -147,8 +164,23 @@ String.prototype.normalizeLength = function(a)
 	if (this.length < a) return this + " ".n(a-this.length);
 	return this;
 }
+String.prototype.capitalize = function()
+{
+    return this.charAt(0).toUpperCase() + this.slice(1).toLowerCase();
+}
 
 
+function classByName(name)
+{
+	var type = eval('typeof '+name);
+	if (type == 'function')
+		return eval(name);
+}
+function ifFn(possibleFn)
+{
+	if (typeof possibleFn == 'function')
+		return possibleFn;
+}
 
 ////////////////////////////////////////////////////
 // misc stuff
@@ -232,6 +264,9 @@ function out()
 		else
 		if (a === null)
 			s += 'null';
+		else
+		if (a===true || a===false)
+			s += a?'true':'false';
 		else
 		if (isDef(a.x, a.y))
 			s += nice(a.x)+' '+nice(a.y);

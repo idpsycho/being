@@ -22,7 +22,7 @@ var arrThingsDef =
 		radius:		[0.3, 2],
 		parts: [
 			{ name: 'circle', clr: 0x327b0e },
-			{ name: 'body', density: 2, damping: 5, radiusMult: 0.6, layer: 'trees' },
+			{ name: 'body', density: 2, damping: 5, radius: 0.6, layer: 'trees' },
 			{ name: 'anchor', freq: 1.5 },
 		],
 	},
@@ -32,25 +32,57 @@ var arrThingsDef =
 		parts: [
 			{ name: 'circle', clr: 0xf2cba4 },
 			{ name: 'body', density: 1 },
-			{ name: 'control' },
+			{ name: 'control', maxSpeed: 3 },
 			{ name: 'nutrition' },
+			{ name: 'health' },
 		],
 		things: [
 			{ name: 'eyes' },
 		],
 	},
 	{
-		name: 		'animal',
+		name: 		'deer',
 		radius: 	[0.5, 1],
 		parts: [
 			{ name: 'circle', clr: 0xc26d31 },
 			{ name: 'body', density: 1 },
-			{ name: 'control' },
+			{ name: 'control', maxSpeed: 4 },
 			{ name: 'ai' },
 		],
 		things: [
 			{ name: 'eyes' },
 		]
+	},
+	{
+		name: 		'wolf',
+		radius: 	0.4,
+		parts: [
+			{ name: 'circle', clr: 0xa6927d },
+			{ name: 'body', density: 1 },
+			{ name: 'control', maxSpeed: 5 },
+			{ name: 'ai' },
+		],
+		things: [
+			{ name: 'wolf-eyes' },
+		]
+	},
+	{
+		name:		'wolf-eyes',
+		things: [
+			{ name: 'wolf-eye', y: -0.25 },
+			{ name: 'wolf-eye', y: 0.25 },
+		],
+	},
+	{
+		name:		'wolf-eye',
+		radius:		0.15,
+		x:			0.7,
+		parts: [
+			{ name: 'circle', clr: 0xd2b071 },
+		],
+		things: [
+			{ name: 'eye-inner', radius: 0.4 },
+		],
 	},
 	{
 		name:		'blood',
@@ -59,6 +91,16 @@ var arrThingsDef =
 		pos:		'rnd',
 		parts: [
 			{ name: 'circle', clr: 0xdd0000 },
+			{ name: 'disappears', after: 10000 },
+		],
+	},
+	{
+		name:		'footprint',
+		layer:		'ground',
+		radius:		0.05,
+		parts: [
+			{ name: 'circle', clr: 0, alpha: 0.1 },
+			{ name: 'disappears', after: 10000 },
 		],
 	},
 	{
@@ -100,25 +142,29 @@ function genThing(name, parentThing, defCustom)
 	if (defCustom)
 		$.extend(def, defCustom);
 
-	def.parentRadius =	parentThing ?
-						parentThing.radius :
-						1;
-
-	def.radius = calcRadius(def.radius);	// calculate it right now
-	def.radius *= def.parentRadius;			// ratio of parent
-
+	calcRadius(def, parentThing);
 	var t = new Thing( def, parentThing );
 
 	return t;
 }
 
-
-function calcRadius(val)
+function chooseRadius(val)
 {
 	if (notDef(val))	return 1.0;	// sameRatio
 	if (!val.length)	return val;
 	else				return rnd( val[0], val[1] );
 }
+function calcRadius(def, parent)
+{
+	def.radius = chooseRadius(def.radius);
+
+	if (parent)
+	{
+		def.parentRadius = parent.radius;
+		def.radius *= parent.radius;
+	}
+}
+
 
 function getThingDef(name)
 {

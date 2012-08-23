@@ -9,6 +9,9 @@ var g_ivankRatio = 100;
 // dbg.afterFrame();
 
 
+
+
+
 ivank_drawText = function(stage, s, x, y, clr)
 {
 	var fontSize = 20;

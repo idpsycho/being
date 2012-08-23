@@ -171,6 +171,16 @@ function rndi(x, mx)
 // forRangeStepsLog(10, 1000, 3, fn) !!
 // - will call 3 times logarithmically: 10, 100, 1000
 // !! though i'm not sure if it works properly right now, got to do some tests
+
+function rangeConvert(f, fromMin, fromMax, toMin, toMax)
+{
+	f = rangeUnit(f, fromMin, fromMax);
+	if (f < 0 || f > 1)
+		return false;
+
+	return toMin + f*(toMax-toMin);
+}
+
 function rangeUnit(f, mn, mx)
 {
 	if (notDef(mx)) {
@@ -207,6 +217,13 @@ function forRangeSteps(mn, mx, steps, fn, log)
 		if (b == false || !step)
 			break;
 	}
+}
+
+function abRatio(a, b)
+{
+	var ab = a+b;
+	if (!ab) return 0.5;
+	return a/ab;
 }
 
 
@@ -299,6 +316,9 @@ function toDeg(rad) { return deg * inDegs; }
 
 function vxy(x, y)
 {
+	if (notDef(x, y))
+		return;
+
 	if (typeof x.x!='undefined')
 		return v2c(x);	// should be vector
 	return v2(x, y);
@@ -328,13 +348,15 @@ function v2p(t)			{ return t.x.toFixed(2)+' '+t.y.toFixed(2); }
 function v2null(v)		{ if (v) v.x=v.y=0; else return {x:0, y:0}; }
 function v2min(a, b)	{ return v2( min(a.x,b.x), min(a.y,b.y) ); }
 function v2max(a, b)	{ return v2( max(a.x,b.x), max(a.y,b.y) ); }
-function v2center(a, b)	{ return v2add( a, v2mult( v2sub(b,a),0.5 ) ); }
 function v2perp(a, f)	{ f=f||1; return v2(-a.y*f, a.x*f); }
 function v2perpL(a)		{ return v2(a.y, -a.x); }
 function v2perpMe(v, f)	{ f=f||1; var y=v.y; v.y=v.x*f; v.x=-y*f; }
 function v2perpMeL(v)	{ var x=v.x; v.x=v.y; v.y=-x; }
 function v2pow(v, f)	{ return v2( abspow(v.x, f), abspow(v.y, f) ); }
 function v2powMe(v, f)	{ v.x = abspow(v.x, f); v.y = abspow(v.y, f); }
+function v2lerp(a, b, f){ return v2add( a, v2mult( v2sub(b,a),f ) ); }
+function v2center(a, b)	{ return v2lerp(a, b, 0.5); }
+
 function v2norm(v)
 {
 	var len = Math.sqrt(v.x*v.x+v.y*v.y);

@@ -17,65 +17,85 @@ function Thing(def, parent)
 	t.pos		= v2null();
 	t.rot		= 0;//rnd11(50);
 	t.radius	= def.radius;
-	t.sprite	= null;
 	t.things	= [];
+	t.parts		= [];
 	t.sprite	= createSprite();
 
 	function init()
 	{
-		t.body		= addPart('body', PartBody);
-		t.control	= addPart('control', PartControl);
-		t.anchor	= addPart('anchor', PartAnchor);
-		t.circle	= addPart('circle', PartCircle);
-		t.nutrition	= addPart('nutrition', PartNutrition);
-		t.ai		= addPart('ai', PartAI);
-
+		addParts(def.parts);
 		addThings(def.things);
 
 		if (def.name == 'blood')
 			var q = 4;
+
 		var v = getDefPosition(def);
 		t.setPos(v.x, v.y);
 	}
 
-	function addThings()
+	function addThings(arrDef)
 	{
-		if (!def.things) return;
-		for (var i=0; i < def.things.length; i++)
+		if (!arrDef) return;
+		for (var i=0; i < arrDef.length; i++)
 		{
-			var defT = def.things[i];
+			var defT = arrDef[i];
 			var name = defT.name;
 
 			t.addThing(name, defT);
 		}
 	}
 
-	function addPart(name, className)
+	function addParts(arrDef)
 	{
-		if (!(def.parts instanceof Array))
+		if (!arrDef) return;
+		for (var i=0; i < arrDef.length; i++)
+		{
+			var defP = arrDef[i];
+			var name = defP.name;
+
+			t.addPart(name, defP);
+		}
+	}
+
+	t.addPart = function(name, defP)
+	{
+		var className = 'Part' + name.capitalize();
+
+		var c = classByName(className);
+		if (!c)
 			return;
 
-		// part definition
-		var d = def.parts.findByAttr('name', name);
-		if (!d) return;
+		// hm, toto som si neni isty, ci to ma len radius doplnit alebo aj nieco ine..
+		calcRadius(defP, t);
+		var p = new c(defP, t);
 
-		d.radius = defined(d.radius, t.radius);
-		if (isDef(d.radiusMult))
-			d.radius = d.radius * d.radiusMult;
+		t.parts.push( p );
+		t[name] = defined(t[name], p);
+	}
+	t.addThing = function(name, defCustom)
+	{
+		var thing = genThing(name, t, defCustom);
+		t.things.push(thing);
+		return thing;
+	}
 
-		return new className(d, t);
+	function eachPart(fn)
+	{
+		for (var i=0; i < t.parts.length; i++)
+			fn(i, t.parts[i]);
 	}
 
 	t.update = function()
 	{
-		if (t.body)		t.body.update();
+		eachPart(function(i,p) { p.bUpdate = true; });
 
+		if (t.body)		t.body.update();
 		t.applyPos(t.pos, t.rot);
 
-		if (t.control)	t.control.update();
-		if (t.circle)	t.circle.update();
-		if (t.nutrition)t.nutrition.update();
-		if (t.ai)		t.ai.update();
+		eachPart(function(i,p) {
+			if (p.bUpdate && p.update)
+				p.update();
+		});
 
 		for (var i=0; i < t.things.length; i++)
 			t.things[i].update();
@@ -111,6 +131,38 @@ function Thing(def, parent)
 				arr.push(th);
 
 			arr.append( th.getThing(name) );
+		}
+		return arr;
+	}
+	t.partAction = function(name, action, v1, v2, v3)
+	{
+		t.doWithParts(name, function(p)
+		{
+			var fn = ifFn( p[action] );
+			if (fn)
+				fn(v1, v2, v3);
+		});
+	}
+	t.doWithParts = function(name, fn)
+	{
+		var arr = t.getPart(name);
+		for (var i=0; i < arr.length; i++)
+			fn(arr[i]);
+	}
+	t.getPart = function(name, searchSubthings)
+	{
+		var arr = [];
+		for (var i=0; i < t.parts.length; i++)
+		{
+			var p = t.parts[i];
+			if (p.name == name)
+				arr.push(p);
+		}
+
+		if (searchSubthings)
+		{
+			for (var i=0; i < t.things.length; i++)
+				arr.append( t.things[i].getPart(name) );
 		}
 		return arr;
 	}
@@ -156,12 +208,30 @@ function Thing(def, parent)
 	{
 		if (t.control)	t.control.turn(degs, spd);
 	}
-
-	t.addThing = function(name, defCustom)
+	t.remove = function(bDestroy)
 	{
-		var thing = genThing(name, t, defCustom);
-		t.things.push(thing);
-		return thing;
+		if (!bDestroy)
+		{
+			t.bRemove = true;
+			return;
+		}
+
+		$.each(t.things, removeThing);
+		$.each(t.parts, removePart);
+
+		if (t.sprite)
+		{
+			t.sprite.parent.removeChild( t.sprite );
+			t.sprite = null;
+		}
+	}
+	function removePart(i, p)
+	{
+		if (p.remove) p.remove();
+	}
+	function removeThing(i, th)
+	{
+		th.remove();
 	}
 	///////////////////////////////////////////////////
 

@@ -1,8 +1,10 @@
 # Being
 Game about being. Somebody, something, somewhere. I don't even know what it is yet. World simulator? AI emergence? Conceptual exploration? I have yet to find out.
 
-Concept:
+### Concept:
 <img src="https://raw.github.com/idpsycho/being/master/concepts/human-and-animals.png">
 
-Screenshot:
+### Screenshots - how the game evolves..
 <img src="https://raw.github.com/idpsycho/being/master/concepts/01-eyes.png">
+
+<img src="https://raw.github.com/idpsycho/being/master/concepts/01-wolf_hunt.png">

@@ -37,8 +37,9 @@ function loadWorld(s)
 	g_player = addThing('human', 0, 0);
 	g_cam.lockTo(g_player);
 
-	addThingN(13, 'animal');
-	addThingN(70, 'tree');
+	addThingN(4, 'deer');
+	addThingN(1, 'wolf');
+	addThingN(50, 'tree');
 }
 function addThingN(n, name)
 {
@@ -53,8 +54,11 @@ function addThing(name, x, y)
 	var t = genThing(name);
 	if (!t) return;
 
-	if (isDef(x, y))
-		t.setPos(x, y);
+	var v = vxy(x, y);
+	if (isDef(v))
+	{
+		t.setPos(v);
+	}
 	else
 	{
 		var tried=0;
@@ -106,12 +110,19 @@ function drawNewDebugTexts()
 function updateThings()
 {
 	for (var i=0; i < g_arrThings.length; i++)
+		g_arrThings[i].update();
+
+	var bRemove = 0;
+	for (var i=0; i < g_arrThings.length; i++)
 	{
 		var a = g_arrThings[i];
-		a.update();
+		if (a.bRemove)
+			a.remove('destroy');
 
-		//dbg.drawLine(0, 0, a.pos.x, a.pos.y)
+		bRemove |= a.bRemove;
 	}
+	if (bRemove)
+		g_arrThings = g_arrThings.filterByAttr('bRemove', true, 'not');
 }
 
 var framecount = 0;
@@ -156,21 +167,34 @@ function drawPlayerGui()
 {
 	if (!g_player) return;
 
-	sw = g_ikStage.stageWidth;
-	sh = g_ikStage.stageHeight;
-	w = -sw*0.2;
-	h = -20;
-	x = sw - sw*0.05;
-	y = sh - sh*0.05;
+	var sw = g_ikStage.stageWidth;
+	var sh = g_ikStage.stageHeight;
+	var x = sw - sw*0.05;
+	var y = sh - sh*0.05;
+	var h = -20;
 
-	var n = g_player.nutrition;
-	if (!n) return;
+	var nutr = g_player.getPart('nutrition')[0];
+	var hlth = g_player.getPart('health')[0];
 
-	var b = 1;	// border
-	var f01 = n.getNutrition01();
-	gui.drawRect(x+b, y+b, w-b*2, h-b*2, 0x331100);
-	gui.drawRect(x, y, w*f01, h, 0xc26d31);
-	//out(f01);
+	drawBar(nutr, x, y+h*1.5, 0xc26d31);
+	drawBar(hlth, x, y, 0xaa0000);
+}
+
+function drawBar(bar, x, y, clr)
+{
+	if (!bar) return;
+	var f01 = bar;
+	if (typeof f01 == 'object')
+		f01 = f01.get01();
+
+	var sw = g_ikStage.stageWidth;
+	var sh = g_ikStage.stageHeight;
+	var b = 1; // border
+	var w = -sw*0.2;
+	var h = -20;
+
+	gui.drawRect(x+b, y+b, w-b*2, h-b*2, 0);
+	gui.drawRect(x, y, w*f01, h, clr);
 }
 
 function processMouse()
@@ -278,11 +302,13 @@ function processInputs()
 
 	if (g_player)
 	{
-		var spd = kd('SHIFT') ? 1 : 3;
-		if (kd('UP,W')) g_player.move('up', spd);
-		if (kd('DN,S')) g_player.move('dn', spd);
-		if (kd('LT,A')) g_player.move('lt', spd);
-		if (kd('RT,D')) g_player.move('rt', spd);
+		var bFast = !kd('SHIFT');
+		if (kd('UP,W')) g_player.move('up', bFast);
+		if (kd('DN,S')) g_player.move('dn', bFast);
+		if (kd('LT,A')) g_player.move('lt', bFast);
+		if (kd('RT,D')) g_player.move('rt', bFast);
+
+		if (kp('B'))	g_player.partAction('health', 'bite', 10);
 	}
 
 	//out( kd('SHIFT')?1:0 );

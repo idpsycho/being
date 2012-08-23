@@ -16,10 +16,60 @@ function getDefPosition(def)
 	return v;
 }
 
+
+function randomPointOnMap()
+{
+	return v2rndxy(20, 10);
+}
+
+//////////////////
+// radius stuff
+// function chooseRadius(val)
+// {
+// 	if (notDef(val))	return 1.0;	// sameRatio
+// 	if (!val.length)	return val;
+// 	else				return rnd( val[0], val[1] );
+// }
+// function calcRadius(defRadius, parent)
+// {
+// 	var r = chooseRadius(defRadius);
+// 	if (parent)
+// 		r *= parent.radius;
+
+// 	return r;
+// }
+///////////////
+// 		defP.radius = calcRadius(defP.radius, t);
+function overridePartDef(defP, def)
+{
+	defP.radius = defined(defP.radius, def.radius);
+
+	// $.each(def, function(i, e)
+	// {
+	// 	defP[i] = defined(defP[i], e);
+	// });
+}
+
+
+
+
+
+
+
+
+
+
+		//  ███   █   ███     ███   █      ████
+		// █      █   █  █   █      █      █
+		// █      █   ███    █      █      ██
+		// █      █   █  █   █      █      █
+		//  ███   █   █  █    ███   ████   ████
+
 function PartCircle(def, thing)
 {
 	assert(def.clr, thing, 'Circle init');
 	var t = this;
+	t.name = 'circle';
 	t.thing = thing;
 
 	function init()
@@ -41,10 +91,12 @@ function PartCircle(def, thing)
 	t.redrawSprite = function()
 	{
 		var sp = t.sprite;
-
 		var g = sp.graphics;
+
+		def.alpha = defined(def.alpha, 1);
+
 		g.clear();
-		g.beginFill(def.clr);
+		g.beginFill(def.clr, def.alpha);
 
 		var v = getDefPosition(def);
 		var x = g_ivankRatio * v.x;
@@ -52,10 +104,22 @@ function PartCircle(def, thing)
 		var r = g_ivankRatio * def.radius;
 		g.drawCircle(x, y, r);
 	}
+	t.getColor = function() { return def.clr; }
+	t.getAlpha = function() { return def.alpha; }
 	t.setColor = function(clr)
 	{
 		clr = normalizeClr(clr);
 		def.clr = clr;
+
+		t.redrawSprite();
+	}
+	t.setAlpha = function(a01)
+	{
+		var diff = abs(a01, def.alpha);
+		if (diff < 0.015)
+			return;
+
+		def.alpha = a01;
 
 		t.redrawSprite();
 	}
@@ -65,13 +129,38 @@ function PartCircle(def, thing)
 		//t.posChanged(thing.pos);
 	}
 
+	t.remove = function()
+	{
+		return;// teoreticky staci parent sprite zrusit
+		if (!t.sprite || !t.sprite.stage)
+			return 'wtf';
+
+		t.sprite.stage.removeChild( t.sprite );
+		t.sprite = null;
+	}
 	init();
 }
 
 
+
+
+
+
+
+
+
+
+
+		// ███     ███    ███    █   █
+		// █  █   █   █   █  █    █ █
+		// ███    █   █   █  █     █
+		// █  █   █   █   █  █     █
+		// ███     ███    ███      █
+
 function PartBody(def, thing)	// def: radius, density
 {
 	var t = this;
+	t.name = 'body';
 	t.thing = thing;
 
 	function init()
@@ -87,6 +176,8 @@ function PartBody(def, thing)	// def: radius, density
 
 		// dont have any viewing angle, so this isnt necessary yet
 		thing.rot = t.body.GetAngle()*inDegs;
+
+		t.bUpdate = false;
 	}
 
 	t.posChanged = function(v, r)
@@ -98,6 +189,10 @@ function PartBody(def, thing)	// def: radius, density
 			t.body.SetAngle( r*inRads );
 	}
 
+	t.remove = function()
+	{
+		g_box2d.DestroyBody(t.body)
+	}
 	////////////////////////////////////////////////////////////
 
 	function createBox2dCircle(radius, density, damping)
@@ -135,12 +230,30 @@ function PartBody(def, thing)	// def: radius, density
 	init();
 }
 
+
+
+
+
+
+
+
+
+
+
+		//  ███    ███    █  █   █████   ███     ███    █
+		// █      █   █   ██ █     █     █  █   █   █   █
+		// █      █   █   █ ██     █     ███    █   █   █
+		// █      █   █   █  █     █     █  █   █   █   █
+		//  ███    ███    █  █     █     █  █    ███    ████
+
 function PartControl(def, thing)
 {
 	var t = this;
+	t.name = 'control';
 	t.thing = thing;
 
-	t.maxSpeed = 3;
+	t.maxSpeed = defined(def.maxSpeed, 3);
+	t.wantSpeed = t.maxSpeed;
 	t.maxRot = 25;
 
 	t.update = function()
@@ -167,7 +280,21 @@ function PartControl(def, thing)
 			b.ApplyImpulse( b2v(t.moveBy), b.GetWorldCenter() );
 
 			t.limitSpeed();
+			t.emitFootprint();
 		}
+	}
+
+	t.lastFootprint = v2null();
+	t.emitFootprint = function()
+	{
+		if (thing.getSpeed() < 0.5)
+			return;
+
+		if (v2isCloserThan(t.lastFootprint, thing.pos, 2))
+			return;
+
+		addThing('footprint', thing.pos);
+		t.lastFootprint = v2c(thing.pos);
 	}
 	t.updateDirection = function(b)
 	{
@@ -194,7 +321,7 @@ function PartControl(def, thing)
 		if (!partBody) return;
 		var b = partBody.body;
 
-		var mx = t.maxSpeed;
+		var mx = t.wantSpeed;
 		var vel = b.GetLinearVelocity();
 		var len = v2len(vel);
 		if (len > mx)
@@ -210,12 +337,12 @@ function PartControl(def, thing)
 		if (spd) t.rotSpeed = spd;
 	}
 
-	t.move = function(v, spd)
+	t.move = function(v, bFast)
 	{
 		if (!t.moveBy)
 			t.moveBy = v2null();
 
-		t.maxSpeed = defined(spd, 3);
+		t.wantSpeed = bFast ? t.maxSpeed : 1;
 
 		if (typeof v == 'string')
 		{
@@ -233,13 +360,25 @@ function PartControl(def, thing)
 
 
 
-////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////
 
+
+
+
+
+
+
+
+
+		//  ██    █  █    ███   █  █    ███    ███
+		// █  █   ██ █   █      █  █   █   █   █  █
+		// ████   █ ██   █      ████   █   █   ███
+		// █  █   █  █   █      █  █   █   █   █  █
+		// █  █   █  █    ███   █  █    ███    █  █
 
 function PartAnchor(def, thing)
 {
 	var t=this;
+	t.name = 'anchor';
 	t.thing = thing;
 
 	function init()
@@ -304,9 +443,24 @@ function PartAnchor(def, thing)
 }
 
 
+
+
+
+
+
+
+
+
+		// █  █   █  █   █████   ███    █   █████   █    ███    █  █
+		// ██ █   █  █     █     █  █   █     █     █   █   █   ██ █
+		// █ ██   █  █     █     ███    █     █     █   █   █   █ ██
+		// █  █   █  █     █     █  █   █     █     █   █   █   █  █
+		// █  █   ████     █     █  █   █     █     █    ███    █  █
+
 function PartNutrition(def, thing)
 {
 	var t=this;
+	t.name = 'nutrition';
 	t.thing = thing;
 
 	t.max = 100;
@@ -320,78 +474,251 @@ function PartNutrition(def, thing)
 		t.now -= t.burnIdle;
 		t.now -= t.burnActive * thing.getSpeed();
 		//out(t.now);
+
+		if (t.now <= 0)
+			thing.partAction('health', 'sub', 1/60);
 	}
 	t.eat = function(amount)
 	{
 		t.now -= amount;
 	}
-	t.getNutrition01 = function()
+	t.get01 = function()
 	{
 		var f = rangeUnit(t.now, t.max);
 		return minmax(f, 0, 1);
 	}
 }
 
-function PartAI(def, thing)
+
+
+
+
+
+
+
+
+		// █  █   ████    ██    █      █████   █  █
+		// █  █   █      █  █   █        █     █  █
+		// ████   ██     ████   █        █     ████
+		// █  █   █      █  █   █        █     █  █
+		// █  █   ████   █  █   ████     █     █  █
+
+function PartHealth(def, thing)
 {
 	var t=this;
+	t.name = 'health';
 	t.thing = thing;
 
-	t.nextT = 0;
-	t.action = 'idle';
+	t.max = 100;
+	t.now = 100;
+	t.smooth = t.now;
+
+	t.healIdle = 0.1/60;
+	t.nextBleed = 0;
 
 	t.update = function()
 	{
-		// treba sa obzerat okolo za vsetkymi ruchmi (predatory, praskania konarov)
-		// zatial len simulacia
-		var nowT = time();
-		if (t.nextT > nowT)
-		{
-			if (t.action)
-				t.doAction();
-			return;
-		}
+		t.add( t.healIdle );
 
-		// decide action
-		t.nextT = nowT + 1000;//rnd(500, 5000);
+		// this should return the same value, but be smoothly animated
+		t.smooth += (t.now - t.smooth) * 0.3;
 
-		t.action = 'go';
+		var f = rangeConvert( t.get01(), 0.5, 0, 3, 0.4 );
+		if (f)
+			t.bleedEvery( f*1000 );
 	}
-
-	t.doAction = function()
+	t.bleedEvery = function(ms)
 	{
-		if (!t.to) {
-			t.to = rndi(7) ? v2rndxy(40, 20) : g_player;
+		if (ago(t.nextBleed) < 0)
+			return;
 
-			if (t.to==g_player)
-			t.thing.doWith('eye', function(eye) {
-				eye.circle.setColor('f11');
+		addThing('blood', thing.pos.x, thing.pos.y);
+
+		// randomly half up/down
+		t.nextBleed = time() + ms + rnd11(ms*0.8);
+	}
+	t.sub = function(f) { return t.add(-f); }
+	t.add = function(f)
+	{
+		t.set( t.now + f );
+	}
+	t.set = function(f)
+	{
+		t.now = minmax(f, 0, t.max);
+	}
+	t.bite = function(f, attacker)
+	{
+		t.sub(f);
+
+		if (!attacker)
+			attacker = thing;
+
+		var ratio = abRatio(thing.radius*0.5, attacker.radius);
+		var v = v2lerp(thing.pos, attacker.pos, ratio);
+		addThing('blood', v.x, v.y);
+	}
+	t.get01 = function()
+	{
+		var f = rangeUnit(t.smooth, t.max);
+		return minmax(f, 0, 1);
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+		// ███    █    ███     ██    ███    ███    ████    ██    ███     ███
+		// █  █   █   █       █  █   █  █   █  █   █      █  █   █  █   █
+		// █  █   █    ███    ████   ███    ███    ██     ████   ███     ███
+		// █  █   █       █   █  █   █      █      █      █  █   █  █       █
+		// ███    █    ███    █  █   █      █      ████   █  █   █  █    ███
+
+function PartDisappears(def, thing)
+{
+	var t=this;
+	t.name = 'disappears';
+	t.thing = thing;
+
+	t.created = time();
+
+	t.update = function()
+	{
+		if (!t.disappearing)
+		{
+			t.disappearing = true;
+			thing.doWithParts('circle', function(p) {
+				t.alpha = p.getAlpha();
+				t.origAlpha = t.alpha;
 			});
 		}
 
-		thing.turn( v2angle(thing.getVel()) );
+		var secs = def.after / 1000;
+		t.alpha -= t.origAlpha/(secs*60);
 
-		var B = t.to==g_player;
-		var maxSpeed = 1;
-		var fr = thing.pos;
-		var to;
-		if (B)
-		{
-			to = g_player.pos;
-			maxSpeed = 3.1;
-		}
+		if (t.alpha > 0)
+			thing.doWithParts('circle', function(p) {
+				p.setAlpha(t.alpha);
+			});
 		else
-			to = t.to;
+			thing.remove();
+	}
+}
 
-		thing.move( v2dirTo(fr, to), maxSpeed );
-		if (v2dist(fr, to) < thing.radius*2)
+
+
+
+
+
+
+
+
+
+
+		//  ██    █
+		// █  █   █
+		// ████   █
+		// █  █   █
+		// █  █   █
+
+function PartAi(def, thing)
+{
+	var t=this;
+	t.name = 'ai';
+	t.thing = thing;
+
+	t.update = function()
+	{
+		if (thing.name == 'wolf')
+			t.updateWolf();
+		else
+			t.updateDeer();
+	}
+
+	t.updateDeer = function()
+	{
+		t.walkAround();
+	}
+	t.isNear = function(p, dist)
+	{
+		dist = defined(dist, 0);
+		dist += thing.radius*1.1;
+		return v2isCloserThan(thing.pos, p, dist);
+	}
+	t.isFar = function(p, dist)
+	{
+		dist = defined(dist, 0);
+		dist += thing.radius*1.1;
+		return v2isFurtherThan(thing.pos, p, dist);
+	}
+	t.walkAround = function()
+	{
+		if (!t.to || t.isNear(t.to))
+			t.to = randomPointOnMap();
+
+		t.turnByVelocity();
+		t.moveTowards( t.to );
+	}
+	t.updateHuntHuman = function()
+	{
+		var to = g_player.pos;
+		t.turnByVelocity();
+		t.moveTowards( to, 'fast' );
+
+		if (t.isNear(g_player.pos, g_player.radius))
 		{
-			if (B) t.thing.doWith('eye', function(eye) {
-					eye.circle.setColor('fff');
-				});
-			t.to = null;
-			t.action = null;
+			g_player.partAction('health', 'bite', 10, thing);
+			t.setHuntHuman(false);
 		}
 	}
 
+	t.moveTowards = function(v, bFast)
+	{
+		thing.move( v2dirTo(thing.pos, v), bFast );
+	}
+
+	t.turnByVelocity = function()
+	{
+		var v = thing.getVel();
+		if (v2len(v) > 0.1)
+			thing.turn( v2angle(v) );
+	}
+
+	t.updateWolf = function()
+	{
+		if (t.huntHuman)
+		{
+			t.updateHuntHuman();
+
+			if (t.isFar(g_player.pos, 6))
+				t.setHuntHuman(false);
+		}
+		else
+		{
+			t.walkAround();
+
+			if (t.isNear(g_player.pos, 4))
+				t.setHuntHuman(true);
+		}
+	}
+	t.setHuntHuman = function(b)
+	{
+		if (t.stoppedHunting && ago(t.stoppedHunting) < 1500)
+			return;
+
+		t.huntHuman = b;
+		if (!b)
+			t.stoppedHunting = time();
+
+		t.thing.doWith('wolf-eye', function(eye) {
+			eye.circle.setColor( !b ? 0xd2b071 : 'f11' );
+		});
+	}
 }
+

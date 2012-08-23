@@ -1,88 +1,114 @@
-@ blabla
-dokazovanie niecoho niekomu
-nieco za nieco, kazdy mi nieco da, a nieco za to chce
-mozno by som mal robit veci, ktorymi sa chcem chvalit ludom - udrzalo by ma to pri aktivite, a nepustal by som sa do veci ktore nejdu spravit, kedze tymi by som sa nepochvalil
-hlboky les, v ktorom neviem co je
-musi tam byt nieco, co nebudem vediet co je, aby ma to zaujalo niecim svojskym
-akoze sposobom zivota
-sposobom pohybu (opatrnost, pokojnost, aktivnost)
-sposobom stravy (setrenie, vyberavost)
-sposobom interakcie (priatelskost, strach, ignore)
-ako zije bakteria?
-ide za jedlom
-uteka pri iritacii, vracia sa k jedlu
-do veci chcem pridavat vselijake featury
-chodenie, nutricie+jedenie, utocenie, zivot a zomieranie, potom nejake to riadenie, zacat asi treba od najprvsieho, postupne sa mozu pridavat rozne logicke prvky
+# ======================================================
+# DOJMY A PREDSTAVY - sem sa pise najprv, co ma napadlo ;)
+	dokazovanie niecoho niekomu
+	nieco za nieco, kazdy mi nieco da, a nieco za to chce
+	mozno by som mal robit veci, ktorymi sa chcem chvalit ludom - udrzalo by ma to pri aktivite, a nepustal by som sa do veci ktore nejdu spravit, kedze tymi by som sa nepochvalil
+	hlboky les, v ktorom neviem co je
+	musi tam byt nieco, co nebudem vediet co je, aby ma to zaujalo niecim svojskym
+	akoze sposobom zivota
+	sposobom pohybu (opatrnost, pokojnost, aktivnost)
+	sposobom stravy (setrenie, vyberavost)
+	sposobom interakcie (priatelskost, strach, ignore)
+	ako zije bakteria?
+	ide za jedlom
+	uteka pri iritacii, vracia sa k jedlu
+	do veci chcem pridavat vselijake featury
+	chodenie, nutricie+jedenie, utocenie, zivot a zomieranie, potom nejake to riadenie, zacat asi treba od najprvsieho, postupne sa mozu pridavat rozne logicke prvky
+
+	mozem z toho spravit taku hru ako gratitious space battle
+	stacilo by len spisat co presne na to potrebujem a dorobit to
+	ale o to vobec nejde
+	skor treba najst esenciu toho co chcem
+
+	husty les, v ktorom ziju rozne zvierata, a mozem ich sledovat
+	ale aby nemali nejaky plytky zivot
+	praveze maju realne mat challenge v preziti..
+
+	chcem pridat vlkov, ktori budu nahanat cloveka
+	ale pridat 'videnie', a podla toho sa az budu moct rozhodnut, ze idu nahanat
+
+	a srnky zase naucit utekat vzdy ked vidia, plus este chvilu
+
+	mohol by som polovat na vlka
+	skryval by som sa za stromy a sledoval ho	# cez stromy by nemalo byt vidiet
+	vlk by mal zanechavat stopy, ktore by mohli pomerne rychlo miznut # stopy
+	vlk by reagoval na zvuky # ako pridat zvuky
+	tj ked niekto narazi do stromu silno # silne kolizie vytvoria zvuk
+	alebo uteka (ked sa odplasi srnka) # srnka by mala utekat od cloveka
+	vlk bude mat aj hlad # nutrition vlkovi
+		a ked mu klesne moc, tak zozere srnku # douteka a hryzne, co ju zabije
+		nazere sa, a moze si zamacat laby a nechat par krvavych stop # stopy zase
+	huh, a teraz to cele treba nakodit, dat dokopy
+
+	# ai neurons
+	...
+
+# ======================================================
+# VIZIE - tu su uz ujasnene veci, kam chcem ist zhruba
+	zabit zviera - malo by mat nejaku nutricnu hodnotu
+	jest zviera - kym sa neminie nutricna hodnota
+	kamen - na zemi, nekoliduje, ale dal by sa hadzat
+	controls - hold/release, throw, eat, punch
+		grab - bud kamen zo zeme, alebo zviera sa snazit zabrzdit, pripadne drzat sa stromu
+		drop - bud pustit kamen, alebo pustit zviera, pripadne pustit sa stromu
+		throw - ako daleko je mys, tam sa to pokusi hodit, limitovane silou
+				(cize srnku ani strom moc neodhodi, maly strom aj ano trochu)
+				a kamen hodi daleko, ale tiez podla velkosti
+				(aj damage podla velkosti by mal spravit
+	zviera - ani nie ai, ako pripravit 'mozog', ktory mozem rucne iniciovat
+			a neskor dorobit ucenie
+
+	vymysliet ako sa budu podavat tie informacie ze co je vidiet
+
+	# ako pridat zvuky
+		teoreticky v kazdom frejme sa mozu vytvorit vsetky zvuky do nejakeho zoznamu
+		a v update si AI requestne zvuky vo svojom okoli sounds->
+		vlastne asi by tam malo byt vzdy ze v jednom frejme sa vyzbieraju
+		a v dalsom sa spracuju, a budu sa uz aj zbierat do prazdneho pola dalsie zvuky
+	# silne kolizie vytvoria zvuk
+		collision detection v box2d rozbehat
+	# srnka by mala utekat od cloveka
+		ked bude viditelnost, tak spravit, ze ak vidi cloveka, tak uteka opacne
+		neskor neuronmi
+	# nutrition vlkovi
+		nutrition mu mozem dat aj hned teraz..
+		# douteka a hryzne, co ju zabije
+			asi najprv cloveku dat schopnost buchat
+			potom aj vlk bude mat, len on to bude mat silnejsie
+			a taktiez teda treba dat veciam aj health
+			a do AI ze kedy ma hryznut, ale to az ked bude za tymi srnkami utekat
+			a to az ked bude mat hlad
+			a to najprv musi AI spracovat
+
+	# veci ako oci by mali byt lahko konfigurovatelne
+		aby ked pridavam eyes, aby som mohol lahko zmenit farbu
+		idealne keby sa nastavenia pretazuju pokial je objekt s nimi pridany
+		to aj tusim ide, ale treba spravit aby sa pretazili aj parts.premenne
+		teoreticky keby chcem zmenit radius vnutorneho oka, tak:
+		eye.eye-inner.clr = x
 
 
+# ==============================================================
+# CO CHCEM SPRAVIT - sem to prepadne, ked je uz jasne co treba nakodit..
+# (robit to co ma prave fascinuje, lebo to ide same, a neunavuje ma to tak)
+	collision detection pozriet, ze ako robit zvuky
+	pohladat algoritmus ze sa neda vidiet za stromy
+	PartSeeing a pridat do existujucich eyes
+		bude to vediet vratit okolite veci
+		a dat tam algoritmus, ze sa ocami dokazu pozerat na okolite objekty..
+		nech vyzeraju inteligentne ;)
 
-@ to do
-	@ AI heading, visibility info
-	deer by mohli mat smerovanie, cize nejak naznacit 'oci' (dve cierne bodky)
-	a k tomu do AI spravit intersections v tom smere, aby sa do AI dostavala informacia o videnych veciach
-	to sa potom moze pouzit aj pri hracovi, ze bude vidiet len to kde je natoceny
+	overloadovanie atributov cez circle.clr a pod.
+		cize tam kde sa posiela part definicia
+		tak overridenut, vsetky parametre z /([^.]+)\./ dat do pod-definicie
+		v pripade def pre genThing, tak to iste
+		vlozi sa to do objektu s name==match[1], a skrati sa o match[0]
 
-@ treba poriesit ten system, ze budem mat
-{
-	name: 'thing'
-	for fuck's sake what's this
-	children = ['eyes', 'nutritions']
-}
-{
-	name: 'eyes'
-	nejak sem treba dat funkcionalitu, teoreticky cez nejake zakladne eventy nabindovat funkcionalitu
-}
-	@ co dalsie by sa sem dalo strcit z terajsieho Thing ?
-	position, circle, radius - ale v podstate to moze zostat aj hentam, pripadne sa to nepouzije zatial
-
-	chcem ze bude nejaky hollow Thing
-	a ten bude aj spritom
-	a donho budem potom pchat dalsie objekty ako childy
-	a automaticky sa ich grafika tam prida
-
-	cize mam:
-	#Thing				name, children, sprite, pos, clr, radius
-		#Body			density, body
-		#SpringAnchor	anchorBody, joint
-		#Movement		tam bude vsetok pohyb
-
-	################################################################
-	@ ako to bude fungovat
-	thing je nejaky stromovy zaklad, ktory inak nedokaze nic robit
-	len je sucastou levela, a moze mat pod sebou dalsie veci
-
-	genThing('circle')
-		- toto vytvori objekt, hodi ho do g_arrThings
-		- prida donho circle reprezentaciu, init vytvori sprite, hodi ho do ikWorld
+	checkovat visibilitu a renderovat len co treba?
 
 
-	zaklad by malo byt thing, ktore by automaticky bolo aj circle zatial
-	otazka teda je uz len ze ako rozsirit circle o Body
+# ===========================================================
+# NOTE FOR FUTURE: dost dobre mi fungovalo premiesnit kod tam kam patri
+# (napr do noveho classu), a tak pomaly to upratat
+# ! inak som sa len motal !
 
-
-	@ -------------------------
-	treba cely terajsi Thing rozobrat na casti s roznou funkcionalitou, a potom uz sa uvidi co dalej
-	@ -------------------------------
-
-mozno by som to mal spravit tak, ze si poviem co by malo byt odseparovane od zakladu, a odseparujem to vo fungujucom kode do samostatneho celku
-
-
-
-
-@ ========================================================
-@ cim zacat
-background - green grass
-thing - circle, color, name, position, direction, box2d, radius
-input - moving locked thing
-camera - locking, mouse movement
-everything should be encapsulated in kind of modular way for simplicity
-tree - static green thing
-animal - simple random movement ai, health (later view-angle)
-human - hunger, health (somehow show it in gui), inventory
-meat - what goes out of animal
-rock - lays around on ground, nonphysic, throwable, does damage
-things should have their definitions (with universal object generator)
-ability to play with as any object
-	human - movement, take/drop, throw, eat
-	animal - movement, health, survival
-	rock - do nothing, but camera follows it, and it may has some stats
