@@ -8,3 +8,5 @@ Game about being. Somebody, something, somewhere. I don't even know what it is y
 <img src="https://raw.github.com/idpsycho/being/master/concepts/01-eyes.png">
 
 <img src="https://raw.github.com/idpsycho/being/master/concepts/02-wolf_hunt.png">
+
+<img src="https://raw.github.com/idpsycho/being/master/concepts/03-seeing_world.png">

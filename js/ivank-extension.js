@@ -54,8 +54,13 @@ function DebugLayer(stage, applyRatio)
 			dbgStage.removeChildAt(0);
 	}
 
+	t.drawLineV = function(v, v2, clr, w)
+	{
+		t.drawLine(v.x, v.y, v2.x, v2.y, clr, w);
+	}
 	t.drawLine = function(x, y, x2, y2, clr, w) // We Have to Draw the Line Somewhere
 	{
+
 		if (!w) w = 1;
 		clr = normalizeClr(clr);
 
@@ -80,9 +85,15 @@ function DebugLayer(stage, applyRatio)
 		}
 	}
 
-	t.drawText = function(s, x, y, clr)
+	t.drawText = function(s, x, y, clr, fontSize)
 	{
-		var fontSize = 20;
+		if (isV2(x)) {
+			fontSize = clr;
+			clr = y;
+			y = x.y;
+			x = x.x;
+		}
+		fontSize = defined(fontSize, 20);
 
 		x = defined(x, 10);
 		y = defined(y, 10);

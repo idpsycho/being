@@ -87,10 +87,10 @@ function minmaxFix(f, mn, mx)
 
 // absmin(-5, 3) => 3		// returns number that is closer to zero
 // absmax(-5, 3) => -5		// returns number that is further from zero
-function absmin(a, b) { assert(b >= 0); return sign(a) * min( abs(a), abs(b) ); }
-function absmax(a, b) { assert(b >= 0); return sign(a) * max( abs(a), abs(b) ); }
+function absmin(a, b) { return sign(a) * min( abs(a), abs(b) ); }
+function absmax(a, b) { return sign(a) * max( abs(a), abs(b) ); }
 // abspow(-2, 2) => (-2)^2*sign => -4	// returns pow, but with original sign
-function abspow(a, b) { assert(b >= 0); return sign(a) * pow( abs(a), abs(b) ); }
+function abspow(a, b) { return sign(a) * pow( abs(a), abs(b) ); }
 
 // useful to get smallest angle.. btw its not safe, while might take forever..
 function cycleIn(f, from, to)
@@ -322,6 +322,16 @@ function vxy(x, y)
 	if (typeof x.x!='undefined')
 		return v2c(x);	// should be vector
 	return v2(x, y);
+}
+
+function isV2(v)
+{
+	return (v && isDef(v.x, v.y));
+}
+
+function v2ok(v)
+{
+	return v && !isNaN(v.x) && !isNaN(v.y);
 }
 
 function v2(x, y)		{ return {x:x,			y:y}; }

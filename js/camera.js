@@ -16,7 +16,7 @@ function Camera()
 	var t		= this;
 	t.pos		= v2(0, 0);		// centered on screen
 	t.zoom		= 1;
-	t.lockedOn	= null;	// array of objects with (.pos, or .x .y) inside
+	t.lockedOn	= null;	// object with (.pos, or .x .y) inside
 	t.w			= 800;	// screen width
 	t.h			= 480;	// and height
 
@@ -54,39 +54,26 @@ function Camera()
 	t.updateLocking = function()
 	{
 		if (!t.lockedOn) return;
-		if (!(t.lockedOn instanceof Array))
-			t.lockedOn = [t.lockedOn];
 
 		function getPos(o) {
 			if (isDef(o.x, o.y))							return v2(o.x, o.y);
 			if (isDef(o.pos) && isDef(o.pos.x, o.pos.y) )	return v2c(o.pos);
-			console.log('fuu' + wtf_pos);
-
+			out('fuu' + wtf_pos);
 		}
 
-		var vCenter = v2null();
-		var num = 0;
-		for (var i=0; i < t.lockedOn.length; i++)
+		var vC = getPos(t.lockedOn);
+
+		/*
+		var lookAng = t.lockedOn.getLookingAngle ?
+					t.lockedOn.getLookingAngle() : null;
+		if (lookAng)
 		{
-			var o = t.lockedOn[i];
-			if (!o) continue;
-			num++;
-			var p = getPos(o);
-			v2addMe(vCenter, p);
+			var vLookAhead = v2fromAngle(lookAng, 2/t.zoom);
+			v2addMe(vC, vLookAhead);
 		}
-		v2divMe(vCenter, num);
-		t.leapTo(vCenter, 0.05);
-		if (num<=1) return;
+		*/
 
-		var maxDist = 1;
-		for (var i=0; i < t.lockedOn.length; i++)
-		{
-			var o = t.lockedOn[i];
-			if (!o) continue;
-			var d = v2dist(vCenter, getPos(o));
-			maxDist = max(maxDist, d);
-		}
-		t.setZoom( minmax(4/maxDist, 0.1, 1) );
+		t.leapTo(vC, 0.05);
 	}
 	t.leapTo = function(v, f01)
 	{
@@ -111,11 +98,11 @@ function Camera()
 		if (v=='rt') v = v2(f, 0);
 		t.setPos( v2add(t.pos, v) );
 	}
-	t.lockTo = function(obj, obj2){ t.lockedOn = [obj, obj2] }
+	t.lockTo = function(obj){ t.lockedOn = obj; }
 	t.unlock = function()	{ t.lockedOn = null; }
 	t.setZoom = function(f)	{ t.zoom = f; }
-	t.zoomIn = function(f)	{ if (!f) f = 1.05; t.setZoom(t.zoom * f); }
-	t.zoomOut = function(f)	{ if (!f) f = 1.05; t.setZoom(t.zoom / f); }
+	t.zoomIn = function(f)	{ if (!f) f=5; f=1+f/60; t.setZoom(t.zoom * f); }
+	t.zoomOut = function(f)	{ if (!f) f=5; f=1+f/60; t.setZoom(t.zoom / f); }
 	t.zoomWheel = function(d) { d>0 ? t.zoomIn() : t.zoomOut(); }
 
 	t.screenDrag = function(scrPixels)

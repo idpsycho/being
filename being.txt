@@ -58,8 +58,6 @@
 	zviera - ani nie ai, ako pripravit 'mozog', ktory mozem rucne iniciovat
 			a neskor dorobit ucenie
 
-	vymysliet ako sa budu podavat tie informacie ze co je vidiet
-
 	# ako pridat zvuky
 		teoreticky v kazdom frejme sa mozu vytvorit vsetky zvuky do nejakeho zoznamu
 		a v update si AI requestne zvuky vo svojom okoli sounds->
@@ -67,9 +65,7 @@
 		a v dalsom sa spracuju, a budu sa uz aj zbierat do prazdneho pola dalsie zvuky
 	# silne kolizie vytvoria zvuk
 		collision detection v box2d rozbehat
-	# srnka by mala utekat od cloveka
-		ked bude viditelnost, tak spravit, ze ak vidi cloveka, tak uteka opacne
-		neskor neuronmi
+
 	# nutrition vlkovi
 		nutrition mu mozem dat aj hned teraz..
 		# douteka a hryzne, co ju zabije
@@ -92,11 +88,7 @@
 # CO CHCEM SPRAVIT - sem to prepadne, ked je uz jasne co treba nakodit..
 # (robit to co ma prave fascinuje, lebo to ide same, a neunavuje ma to tak)
 	collision detection pozriet, ze ako robit zvuky
-	pohladat algoritmus ze sa neda vidiet za stromy
-	PartSeeing a pridat do existujucich eyes
-		bude to vediet vratit okolite veci
-		a dat tam algoritmus, ze sa ocami dokazu pozerat na okolite objekty..
-		nech vyzeraju inteligentne ;)
+		vlastne hlasitost, a teda to bude ze do akej vzdialenosti to je pocut
 
 	overloadovanie atributov cez circle.clr a pod.
 		cize tam kde sa posiela part definicia
@@ -104,11 +96,8 @@
 		v pripade def pre genThing, tak to iste
 		vlozi sa to do objektu s name==match[1], a skrati sa o match[0]
 
-	checkovat visibilitu a renderovat len co treba?
-
 
 # ===========================================================
 # NOTE FOR FUTURE: dost dobre mi fungovalo premiesnit kod tam kam patri
 # (napr do noveho classu), a tak pomaly to upratat
 # ! inak som sa len motal !
-

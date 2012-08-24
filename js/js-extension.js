@@ -7,6 +7,9 @@ function assert()
 	var last = args.length-1;
 	var msg = args[last];
 
+	if (last==0)
+		console.log('Assert Failed: '+msg);
+	else
 	for (var i=0; i < last; i++)
 	{
 		if (typeof args[i] == 'undefined')
@@ -50,6 +53,16 @@ function defined(value, default_value)
 		return default_value;
 
 	return value;
+}
+
+function isNum(x)
+{
+	return typeof x == 'number';
+}
+
+function isStr(x)
+{
+	return typeof x == 'string';
 }
 
 //////////////////////////////////////////////////////
@@ -113,18 +126,42 @@ Array.prototype.findByAttr = function(name, value)
 			return this[i];
 	}
 }
-Array.prototype.filterByAttr = function(name, value, ifNot)
+Array.prototype.filterByAttr = function(name, values, ifNot)
+{
+	return this.filterByFn(name, function(val)
+	{
+		var b = (val == values);
+
+		if (values instanceof Array)
+			b = (values.indexOf(val)!=-1);
+
+		if (ifNot) b = !b;
+		return b;
+	});
+}
+Array.prototype.filterByFn = function(name, fn)
 {
 	var arr = [];
 	for (var i=0; i < this.length; i++)
 	{
-		var b = (this[i][name] == value);
-		if (ifNot)
-			b = !b;
-		if (b)
-			arr.push(this[i]);
+		var o = this[i];
+		if (fn(o[name]))
+			arr.push(o);
 	}
 	return arr;
+}
+Array.prototype.sortByAttr = function(attr, reverse)
+{
+	this.sort(function(aa, bb)
+	{
+		var a = aa[attr];
+		var b = bb[attr];
+		if (a < b) return -1;
+		if (a > b) return 1;
+		return 0;
+	});
+	if (reverse)
+		this.reverse();
 }
 
 /* TEST:

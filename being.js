@@ -11,6 +11,9 @@ require([
 	'js/math',
 	'js/input',
 	'js/camera',
+	'js/parts-base',
+	'js/parts-alive',
+	'js/parts-ai',
 	'js/parts',
 	'js/thing',
 	'js/things',
@@ -136,7 +139,6 @@ function onEnterFrame()
 	drawNewDebugTexts();
 
 	processInputs();
-	processMouse();
 
 	// timeStep, velocityIterations, positionIterations
 	if (g_box2d) g_box2d.Step(1/60, 6, 2);
@@ -185,7 +187,7 @@ function drawBar(bar, x, y, clr)
 	if (!bar) return;
 	var f01 = bar;
 	if (typeof f01 == 'object')
-		f01 = f01.get01();
+		f01 = f01.get01('smooth');
 
 	var sw = g_ikStage.stageWidth;
 	var sh = g_ikStage.stageHeight;
@@ -197,105 +199,31 @@ function drawBar(bar, x, y, clr)
 	gui.drawRect(x, y, w*f01, h, clr);
 }
 
-function processMouse()
+function processInputs()
 {
+	////////////////////////////////////////////////////
+	// mouse
+
 	if (kd('SPACE'))
 		g_cam.screenDrag(mouseScrChange);
 
 	if (g_player)
 	{
-		// VIEWING ANGLE
-		var v = v2sub(mousePos, g_player.pos);
-		var lookAng = v2angle(v);
-
-		var diffAng = lookAng - g_player.rot;
-		diffAng = cycleIn(diffAng, -180, 180);
-
-		// par stupnov sa natocia oci, zvysok cela bytost
-		var eyeAng = absmin(diffAng, 45);
-
-		//gui.drawText( nice(eyeAng, lookAng, diffAng) );
-		g_player.doWith('eye', function(eye) {
-			eye.setRot( eyeAng );
-		});
-
-		if (g_player.getSpeed() > 1.5)
-			eyeAng = 0;
-		g_player.turn( lookAng-eyeAng );
-
-		//return;
-
-		// VIEW CONE
-		var fov = 100;
-		var dist = 15;
-		var v1 = g_player.pos;
-		var r = lookAng;
-		var viewCone = createFovShape(v1, r, fov, dist);
-
-		var num = 0;
-		g_box2d.QueryShape(function(e)
+		if (kp('MOUSE'))
 		{
-			num++;
-			var data = e.GetBody().GetUserData();
-			if (data)
+			var obj = QueryCircleNearest(mousePos, 0.1, g_player);
+			if (obj)
 			{
-				var p = data.thing.pos;
-				var scr = g_cam.toScreen(p);
-				//dbg.drawLine(v1.x, v1.y, p.x, p.y, 'fff');
+				var maxDist = obj.radius + g_player.radius;
+				if (v2isCloserThan(obj.pos, g_player.pos, maxDist*1.2))
+					obj.partDo('health.bitten', rnd(10, 20), g_player);
 			}
-			return true;
-		}, viewCone, null);
-
-		//dbg.drawText(num, g_player.pos.x+0.5, g_player.pos.y);
-
-
+		}
 	}
 
-}
-	// TODO HODIT NIEKAM
-	function createFovShape(p1, rot, fov, dist)
-	{
-		var arr = [ v2(0, 0) ];
+	////////////////////////////////////////////////////
+	// keyboard
 
-		// - scale sides (so that far point is at DIST, but sides are further)
-		if ('cone')
-		{
-			forRangeSteps(-fov/2, fov/2, 3, function(val)
-			{
-				var vF = v2fromAngle(rot, dist);
-				var p = v2rot(vF, val);
-				arr.push( p );
-			});
-		}
-		else
-		// make polygon round, its more points, but its realistic cone
-		{
-			// scale distance, so that far point stays exactly away
-			// (this actually scales vectors of side-boundaries)
-			dist /= Math.cos(fov/2*inRads);
-
-			var vF = v2fromAngle(rot, dist);
-			var p2 = v2rot(vF, -fov/2);
-			var p3 = v2rot(vF, fov/2);
-
-			arr.push( p2 );
-			arr.push( p3 );
-		}
-
-		for (var i=0; i < arr.length; i++)
-			v2addMe( arr[i], p1 );
-
-		//dbg.drawPoly(arr, 0, 2);
-
-		var b2PolygonShape	= Box2D.Collision.Shapes.b2PolygonShape;
-		var sh = new b2PolygonShape();
-		sh.SetAsArray( b2vArr(arr), arr.length );
-
-		return sh;
-	}
-
-function processInputs()
-{
 	if (kd('NUM*')) resetCam();
 	if (kd('NUM+')) g_cam.zoomIn();
 	if (kd('NUM-')) g_cam.zoomOut();
@@ -308,7 +236,7 @@ function processInputs()
 		if (kd('LT,A')) g_player.move('lt', bFast);
 		if (kd('RT,D')) g_player.move('rt', bFast);
 
-		if (kp('B'))	g_player.partAction('health', 'bite', 10);
+		if (kp('B'))	g_player.partDo('health.bitten', 10);
 	}
 
 	//out( kd('SHIFT')?1:0 );

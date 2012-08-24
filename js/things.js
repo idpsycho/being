@@ -32,9 +32,11 @@ var arrThingsDef =
 		parts: [
 			{ name: 'circle', clr: 0xf2cba4 },
 			{ name: 'body', density: 1 },
-			{ name: 'control', maxSpeed: 3 },
+			{ name: 'control', walkSpeed: 1, runSpeed: 3 },
 			{ name: 'nutrition' },
 			{ name: 'health' },
+			{ name: 'seeing' },
+			{ name: 'looking', at: 'mouse' },
 		],
 		things: [
 			{ name: 'eyes' },
@@ -46,8 +48,11 @@ var arrThingsDef =
 		parts: [
 			{ name: 'circle', clr: 0xc26d31 },
 			{ name: 'body', density: 1 },
-			{ name: 'control', maxSpeed: 4 },
+			{ name: 'control', walkSpeed: 0.7, runSpeed: 4.8 },
+			{ name: 'health' },
 			{ name: 'ai' },
+			{ name: 'seeing' },
+			{ name: 'looking' },
 		],
 		things: [
 			{ name: 'eyes' },
@@ -59,8 +64,12 @@ var arrThingsDef =
 		parts: [
 			{ name: 'circle', clr: 0xa6927d },
 			{ name: 'body', density: 1 },
-			{ name: 'control', maxSpeed: 5 },
+			{ name: 'control', walkSpeed: 2, runSpeed: 5 },
+			{ name: 'health' },
+			{ name: 'nutrition' },
 			{ name: 'ai' },
+			{ name: 'seeing' },
+			{ name: 'looking', eyeMax: 15 },
 		],
 		things: [
 			{ name: 'wolf-eyes' },

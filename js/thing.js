@@ -103,6 +103,11 @@ function Thing(def, parent)
 
 	t.applyPos = function(pos, rot)
 	{
+		if (!t.sprite) {
+			assert(t.bRemove, 'missing sprite, but the object is not being removed');
+			return;
+		}
+
 		t.sprite.x = pos.x * g_ivankRatio;
 		t.sprite.y = pos.y * g_ivankRatio;
 		t.sprite.rotation = rot;
@@ -120,59 +125,125 @@ function Thing(def, parent)
 	}
 
 	///////////////////////////////////////////////////
-	// interface
-	t.getThing = function(name)
-	{
-		var arr = [];
-		for (var i=0; i < t.things.length; i++)
-		{
-			var th = t.things[i];
-			if (th.name == name)
-				arr.push(th);
 
-			arr.append( th.getThing(name) );
-		}
-		return arr;
-	}
-	t.partAction = function(name, action, v1, v2, v3)
+	// thing('eye.setRot', 15)
+	// part('circle.setAlpha', 0.1)
+	t.thingDo = function(name, action, v1, v2, v3)
 	{
-		t.doWithParts(name, function(p)
-		{
-			var fn = ifFn( p[action] );
-			if (fn)
-				fn(v1, v2, v3);
-		});
+		// move params
+		if (name.indexOf('.')!=-1) {
+			var x = name.split('.');
+			if (x.length != 2) return;
+			v3=v2;
+			v2=v1;
+			v1=action;
+			action = x[1];
+			name = x[0];
+		}
+		return t._thingAction(name, action, v1, v2, v3);
 	}
-	t.doWithParts = function(name, fn)
+	t.partDo = function(name, action, v1, v2, v3)
+	{
+		// move params
+		if (name.indexOf('.')!=-1) {
+			var x = name.split('.');
+			if (x.length != 2) return;
+			v3=v2;
+			v2=v1;
+			v1=action;
+			action = x[1];
+			name = x[0];
+		}
+		return t._partAction(name, action, v1, v2, v3);
+	}
+
+	// action
+	t._partAction = function(name, action, v1, v2, v3)
+	{
+		var firstVal;
+		t.eachPart(name, function(p)
+		{
+			var val, fn = ifFn( p[action] );
+			if (fn) val = fn(v1, v2, v3);
+			firstVal = defined(firstVal, val);
+		});
+		return firstVal;
+	}
+	t._thingAction = function(name, action, v1, v2, v3)
+	{
+		var firstVal;
+		t.eachThing(name, function(th)
+		{
+			var val, fn = ifFn( th[action] );
+			if (fn) val = fn(v1, v2, v3);
+			firstVal = defined(firstVal, val);
+		});
+		return firstVal;
+	}
+
+	// do with all that are named..
+	t.eachPart = function(name, fn)
 	{
 		var arr = t.getPart(name);
 		for (var i=0; i < arr.length; i++)
 			fn(arr[i]);
 	}
-	t.getPart = function(name, searchSubthings)
+	t.eachThing = function(name, fn)
 	{
+		var arr = t.getThing(name);
+		for (var i=0; i < arr.length; i++)
+			fn( arr[i] );
+	}
+
+	function compare(val, val_or_array)
+	{
+		var x = val_or_array;
+		if (x instanceof Array)
+			return x.indexOf(val) !=- 1;
+
+		return val == x;
+	}
+
+	// get by name
+	t.getPart = function(names, searchSubthings)
+	{
+		if (isStr(names))
+			names = names.split(',');
+
 		var arr = [];
 		for (var i=0; i < t.parts.length; i++)
 		{
 			var p = t.parts[i];
-			if (p.name == name)
+			if (compare(p.name, names))
 				arr.push(p);
 		}
 
 		if (searchSubthings)
 		{
 			for (var i=0; i < t.things.length; i++)
-				arr.append( t.things[i].getPart(name) );
+				arr.append( t.things[i].getPart(names) );
 		}
 		return arr;
 	}
-	t.doWith = function(name, fn)
+	t.getThing = function(names)
 	{
-		var arr = t.getThing(name);
+		if (isStr(names))
+			names = names.split(',');
 
-		for (var i=0; i < arr.length; i++)
-			fn( arr[i] );
+		var arr = [];
+		for (var i=0; i < t.things.length; i++)
+		{
+			var th = t.things[i];
+			if (compare(th.name, names))
+				arr.push(th);
+
+			arr.append( th.getThing(names) );
+		}
+		return arr;
 	}
+
+
+
 	t.getVel = function()
 	{
 		if (!t.body) return v2null();
@@ -208,6 +279,21 @@ function Thing(def, parent)
 	{
 		if (t.control)	t.control.turn(degs, spd);
 	}
+	t.say = function(msg)
+	{
+		// zatial len takto jebnoducho
+		var v = v2(t.pos.x-0.5, t.pos.y-t.radius);
+		v = g_cam.toScreen(v);
+		gui.drawText(msg, v.x, v.y, '000');
+
+		//out( t.name.toUpperCase()+' says: '+msg );
+	}
+	t.getLookingAngle = function()
+	{
+		var eyeAng = t.partDo('looking.getLookingAngle');
+		return defined(eyeAng, t.rot);
+	}
+
 	t.remove = function(bDestroy)
 	{
 		if (!bDestroy)
