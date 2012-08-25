@@ -57,7 +57,7 @@ function PartControl(def, thing)
 		if (v2isCloserThan(t.lastFootprint, thing.pos, t.wantSpeed))
 			return;
 
-		addThing('footprint', thing.pos);
+		thing.emit('footprint');
 		t.lastFootprint = v2c(thing.pos);
 	}
 	t.updateDirection = function(b)
@@ -204,8 +204,8 @@ function PartHealth(def, thing)
 	{
 		t.add( t.healIdle );
 
-		// SHOW HEALTH
-		dbg.drawText( to_i(t.get01()*100), thing.pos.x, thing.pos.y+0.5);
+		if (!'SHOW HEALTH')
+			dbg.drawText( to_i(t.get01()*100), thing.pos.x, thing.pos.y+0.5);
 
 		// this should return the same value, but be smoothly animated
 		t.smooth += (t.now - t.smooth) * 0.3;
@@ -219,7 +219,7 @@ function PartHealth(def, thing)
 		if (ago(t.nextBleed) < 0)
 			return;
 
-		addThing('blood', thing.pos.x, thing.pos.y);
+		thing.emit('blood');
 
 		// randomly half up/down
 		t.nextBleed = time() + ms + rnd11(ms*0.8);
@@ -242,7 +242,7 @@ function PartHealth(def, thing)
 
 		var ratio = abRatio(thing.radius*0.5, attacker.radius);
 		var v = v2lerp(thing.pos, attacker.pos, ratio);
-		addThing('blood', v.x, v.y);
+		thing.emit('blood');
 
 		thing.partDo('ai.checkOut', attacker.pos);
 	}

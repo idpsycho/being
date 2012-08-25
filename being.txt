@@ -1,100 +1,103 @@
+
 # ======================================================
 # DOJMY A PREDSTAVY - sem sa pise najprv, co ma napadlo ;)
-	dokazovanie niecoho niekomu
-	nieco za nieco, kazdy mi nieco da, a nieco za to chce
-	mozno by som mal robit veci, ktorymi sa chcem chvalit ludom - udrzalo by ma to pri aktivite, a nepustal by som sa do veci ktore nejdu spravit, kedze tymi by som sa nepochvalil
-	hlboky les, v ktorom neviem co je
-	musi tam byt nieco, co nebudem vediet co je, aby ma to zaujalo niecim svojskym
-	akoze sposobom zivota
-	sposobom pohybu (opatrnost, pokojnost, aktivnost)
-	sposobom stravy (setrenie, vyberavost)
-	sposobom interakcie (priatelskost, strach, ignore)
-	ako zije bakteria?
-	ide za jedlom
-	uteka pri iritacii, vracia sa k jedlu
-	do veci chcem pridavat vselijake featury
-	chodenie, nutricie+jedenie, utocenie, zivot a zomieranie, potom nejake to riadenie, zacat asi treba od najprvsieho, postupne sa mozu pridavat rozne logicke prvky
 
-	mozem z toho spravit taku hru ako gratitious space battle
-	stacilo by len spisat co presne na to potrebujem a dorobit to
-	ale o to vobec nejde
-	skor treba najst esenciu toho co chcem
+	# musi byt svet komplexny? alebo cim ma to moze zaujat?
+		strategickymi rozhodovaniami?
+		rpg prvkami, ze ci postavim/nazbieram/obranim sa?
+		ai ma mat challenge v preziti..
 
-	husty les, v ktorom ziju rozne zvierata, a mozem ich sledovat
-	ale aby nemali nejaky plytky zivot
-	praveze maju realne mat challenge v preziti..
+	# chcel som zivy svet, ktory mozem ovplyvnit a proste sa meni:
+		sposobom pohybu (opatrnost, pokojnost, aktivnost)
+		sposobom stravy (setrenie, vyberavost)
+		sposobom interakcie (priatelskost, strach, ignore)
 
-	chcem pridat vlkov, ktori budu nahanat cloveka
-	ale pridat 'videnie', a podla toho sa az budu moct rozhodnut, ze idu nahanat
+	# ai - ako zije bakteria?
+		ide za jedlom		- hunger -> walk around
+		uteka pri iritacii	- iritation -> run away
+		obziera vsetko		- food -> eat
+		boji sa noveho		- new stuff -> be skeptic
 
-	a srnky zase naucit utekat vzdy ked vidia, plus este chvilu
+	# do veci chcem pridavat vselijake featury
+		chodenie
+		nutricie+jedenie
+		utocenie
+		zivot a zomieranie
+		pohyblivost/chodenie
+		mozno ked zacnem robit to ai, tak sa v tom vysomarim
 
-	mohol by som polovat na vlka
-	skryval by som sa za stromy a sledoval ho	# cez stromy by nemalo byt vidiet
-	vlk by mal zanechavat stopy, ktore by mohli pomerne rychlo miznut # stopy
-	vlk by reagoval na zvuky # ako pridat zvuky
-	tj ked niekto narazi do stromu silno # silne kolizie vytvoria zvuk
-	alebo uteka (ked sa odplasi srnka) # srnka by mala utekat od cloveka
-	vlk bude mat aj hlad # nutrition vlkovi
-		a ked mu klesne moc, tak zozere srnku # douteka a hryzne, co ju zabije
-		nazere sa, a moze si zamacat laby a nechat par krvavych stop # stopy zase
-	huh, a teraz to cele treba nakodit, dat dokopy
+	# chcem
+		# preco to chcem je podstatne
+			niektore veci sa daju spravit, ale aby bavilo ich robit, musia mat nejaky zmysel v hlbsom svete, takze tu budu veci, ktorym postupne nachadzam zmysel, a ked uz budu domyslene, tak sa mozu vytvorit
 
-	# ai neurons
-	...
+		#husty_les	- v ktorom zije roznorody svet, ktory mozem sledovat
+					- aj vyplasim
+					- mozem sa on postarat (pliagy, ohrozenia, pohromy)
+					- zasahovat donho
+		#ovce		- staci ked bude ai, budu sa grupit a pes ich bude obiehat
+		#potok		- na pitie, budu tam zvery chodit, casom aj na ine
+		#motyle		- male vlky mozu nahanat a trenovat sa tak (akoze realne ai)
+		#mladata	- s tym ze vramci ai by boli take nemotorne, a ucili by sa
+					- plus by ich rodicia ochranovali
+		#polovanie	- kvoli kozi, lebo mi je zima
+					- lebo vlci ohrozuju nieco moje (rodinu, ovce)
 
 # ======================================================
-# VIZIE - tu su uz ujasnene veci, kam chcem ist zhruba
-	zabit zviera - malo by mat nejaku nutricnu hodnotu
-	jest zviera - kym sa neminie nutricna hodnota
-	kamen - na zemi, nekoliduje, ale dal by sa hadzat
-	controls - hold/release, throw, eat, punch
-		grab - bud kamen zo zeme, alebo zviera sa snazit zabrzdit, pripadne drzat sa stromu
-		drop - bud pustit kamen, alebo pustit zviera, pripadne pustit sa stromu
-		throw - ako daleko je mys, tam sa to pokusi hodit, limitovane silou
-				(cize srnku ani strom moc neodhodi, maly strom aj ano trochu)
-				a kamen hodi daleko, ale tiez podla velkosti
-				(aj damage podla velkosti by mal spravit
-	zviera - ani nie ai, ako pripravit 'mozog', ktory mozem rucne iniciovat
-			a neskor dorobit ucenie
+# VIZIE - tu su uz ujasnene veci, kam chcem ist zhruba,
+# tj, tu nejde o priority, toto su len ujasnene predstavy do jasnych vizii
 
-	# ako pridat zvuky
-		teoreticky v kazdom frejme sa mozu vytvorit vsetky zvuky do nejakeho zoznamu
-		a v update si AI requestne zvuky vo svojom okoli sounds->
-		vlastne asi by tam malo byt vzdy ze v jednom frejme sa vyzbieraju
-		a v dalsom sa spracuju, a budu sa uz aj zbierat do prazdneho pola dalsie zvuky
-	# silne kolizie vytvoria zvuk
-		collision detection v box2d rozbehat
+	# pripravit ai/mozog/neurony/asociacie/podmienky/automata
+		tu si to treba jasne rozkecat, ze o co by islo
 
-	# nutrition vlkovi
-		nutrition mu mozem dat aj hned teraz..
-		# douteka a hryzne, co ju zabije
-			asi najprv cloveku dat schopnost buchat
-			potom aj vlk bude mat, len on to bude mat silnejsie
-			a taktiez teda treba dat veciam aj health
-			a do AI ze kedy ma hryznut, ale to az ked bude za tymi srnkami utekat
-			a to az ked bude mat hlad
-			a to najprv musi AI spracovat
+	# actions:
+		bite/punch	- being.click
+		eat			- meat.click
+		grab/hold	- mouse_hold (strom, deer, rock, wolf, grass)
+						grass by mal mat anchor tym padom, aby sa dal urvat
+						a vlastne aj stromy by mali mat anchor
+		throw		- mouse_release + distance
 
-	# veci ako oci by mali byt lahko konfigurovatelne
-		aby ked pridavam eyes, aby som mohol lahko zmenit farbu
-		idealne keby sa nastavenia pretazuju pokial je objekt s nimi pridany
-		to aj tusim ide, ale treba spravit aby sa pretazili aj parts.premenne
-		teoreticky keby chcem zmenit radius vnutorneho oka, tak:
-		eye.eye-inner.clr = x
+	# ked bude ai
+		nutrition ai
+			hryzenie ze doplni jedlo, hryzie do istej vzdialenosti
+			ze ked nema nutritions, tak je agresivny, inak iba obranne
+			PartMeat by mali mat vsetci, aby sa dali spracovat
+			inak s malym healthom by sa mala nejak aj spomalit ta srnka
+			hunger = 1 - nutrition
+			hunger + aggr -> attack
+			zo zabiteho zvierata vytecie krv, ktora sa potom roznosi po okoli
+			a zmizne az casom..
+
+	# events (for ai)
+		vyzbierat do zoznamu, a podobne ako je getSeen, tak moze byt aj getHeard
+		collisions - something touched you
+		footprints - intensity (degrades with distance)
+
 
 
 # ==============================================================
 # CO CHCEM SPRAVIT - sem to prepadne, ked je uz jasne co treba nakodit..
-# (robit to co ma prave fascinuje, lebo to ide same, a neunavuje ma to tak)
-	collision detection pozriet, ze ako robit zvuky
-		vlastne hlasitost, a teda to bude ze do akej vzdialenosti to je pocut
+# a ked je to prioritne (a fascinuje ma to, a neunavuje ma to)
 
-	overloadovanie atributov cez circle.clr a pod.
-		cize tam kde sa posiela part definicia
-		tak overridenut, vsetky parametre z /([^.]+)\./ dat do pod-definicie
-		v pripade def pre genThing, tak to iste
-		vlozi sa to do objektu s name==match[1], a skrati sa o match[0]
+	# pridat travu
+
+	# dvihnut, polozit, hodit kamen
+		damage trafenej husy co zagaga
+
+	# punch spravit na smer mysi
+		v pripade ze by clovek nieco drzal, tak to bude hodene do takej dialky
+		teda obmedzene silou cloveka - vacsi kamen doleti menej,
+		velky balvan to len mykne, srnka to iste, velky strom ani nehne
+		aj damage podla toho.. teoreticky by to mohlo byt..
+		robene nejakym fyziciacim objektom, ktory vyleti z postavy
+
+	# overload attributes:
+		things.premenne sa pretazuju, treba to domysliet aj pre parts.premenne
+		wolf:
+			eye, circle.clr=#wolfy-color
+		husky:
+			eye, inner.circle.clr = #blue
+
 
 
 # ===========================================================

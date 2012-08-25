@@ -37,42 +37,26 @@ function loadWorld(s)
 {
 	//g_cam.setZoom(1);
 
-	g_player = addThing('human', 0, 0);
+	g_player = newThing('human', {x:0,y:0});
 	g_cam.lockTo(g_player);
 
-	addThingN(4, 'deer');
-	addThingN(1, 'wolf');
-	addThingN(50, 'tree');
+	newThingN(4, 'deer');
+	newThingN(1, 'wolf');
+	newThingN(30, 'tree');
+	newThingN(20, 'rock');
 }
-function addThingN(n, name)
+function newThingN(n, name, def)
 {
-	while (n--) addThing(name);
+	while (n--) newThing(name, def);
 }
-function addThing(name, x, y)
+function newThing(name, def)
 {
-	var m = 3 / g_ivankRatio * 0.6;
-	var w = m * g_ikStage.stageWidth;
-	var h = m * g_ikStage.stageHeight;
+	def = defined(def, {});
+	if (notDef(def.x, def.y))
+		def.rnd = 1;
 
-	var t = genThing(name);
+	var t = genThing(name, def);
 	if (!t) return;
-
-	var v = vxy(x, y);
-	if (isDef(v))
-	{
-		t.setPos(v);
-	}
-	else
-	{
-		var tried=0;
-		do
-		{
-			t.setPos( v2rndxy(w, h) );
-		}
-		while(t.isColliding() && tried++<100);
-		//if (tried>1) out('tries', tried);
-		//ivank_drawText(t.sprite, tried, 0, 0);
-	}
 
 	g_arrThings.push(t);
 	return t;
@@ -239,20 +223,10 @@ function processInputs()
 		if (kp('B'))	g_player.partDo('health.bitten', 10);
 	}
 
-	//out( kd('SHIFT')?1:0 );
-
 	if (kd('UP,DN,LT,RT,W,A,S,D'))
 	{
-		if (g_player && g_player.pos)
-		{
-			var v = v2add(g_player.pos, v2rnd(g_player.radius/2));
-			//if (!rndi(3)) addThing('blood', v.x, v.y);
-		}
-
 		g_cam.lockTo(g_player);
 	}
-
-	//if (kp('C')) lockCam = !lockCam;
 }
 
 

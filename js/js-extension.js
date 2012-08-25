@@ -46,6 +46,7 @@ function notDef()
 
 	return true;	// all was undefined
 }
+
 // x = defined(x, 5);
 function defined(value, default_value)
 {
@@ -63,6 +64,12 @@ function isNum(x)
 function isStr(x)
 {
 	return typeof x == 'string';
+}
+
+function tryDo(fn, nMax)
+{
+	nMax = defined(nMax, 100);
+	while (!fn() && nMax-- > 0);
 }
 
 //////////////////////////////////////////////////////

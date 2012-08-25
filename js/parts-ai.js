@@ -120,7 +120,7 @@ function PartAi(def, thing)
 	t.walkAround = function(to, bFast)
 	{
 		if (!t.to || t.isNear(t.to))
-			t.to = randomPointOnMap();
+			t.to = findFreeSpace();
 
 		if (to)
 			t.to = isDef(to.pos) ? to.pos : to;
@@ -227,10 +227,11 @@ function PartSeeing(def, thing)
 	var t=this;
 	t.name = 'seeing';
 	t.thing = thing;
+	t.DBG = 0;
 
 	t.fov		= defined(def.fov, 100);
 	t.distance	= defined(def.distance, 10);
-	t.refreshEvery = defined(def.refreshEvery, 500);
+	t.refreshEvery = defined(def.refreshEvery, 1000);
 
 	t.lastRefresh = 0;
 	t.arrLast	= [];
@@ -256,7 +257,8 @@ function PartSeeing(def, thing)
 	}
 	t.getCachedSeen = function()
 	{
-		if (ago(t.lastRefresh) > t.refreshEvery)
+		var refreshCache = (ago(t.lastRefresh) > t.refreshEvery);
+		if (refreshCache || t.DBG)
 		{
 			t.arrLast = t.calcSeen();
 			t.lastRefresh = time();
@@ -275,8 +277,10 @@ function PartSeeing(def, thing)
 		g_box2d.QueryShape(function(e)
 		{
 			var bodyP = e.GetBody().GetUserData();
-			if (bodyP && bodyP.thing!=thing)
+			if (bodyP && bodyP.thing!=thing) {
 				arr.push(bodyP.thing);
+				!t.DBG || dbg.drawLineV(thing.pos, bodyP.thing.pos, 0, 2);
+			}
 
 			return true;
 		}, viewCone, null);
@@ -300,6 +304,7 @@ function PartSeeing(def, thing)
 
 			a._seenAtDistance = v2dist(a.pos, thing.pos);
 			visible.push(a);
+			!t.DBG || dbg.drawLineV(thing.pos, a.pos, '0f0', 4);
 		}
 		return visible;
 	}
@@ -355,7 +360,7 @@ function PartSeeing(def, thing)
 		for (var i=0; i < arr.length; i++)
 			v2addMe( arr[i], p1 );
 
-		//dbg.drawPoly(arr, 0, 2);
+		!t.DBG || dbg.drawPoly(arr, 0, 2);
 
 		var b2PolygonShape	= Box2D.Collision.Shapes.b2PolygonShape;
 		var sh = new b2PolygonShape();

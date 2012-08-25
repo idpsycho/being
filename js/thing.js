@@ -74,7 +74,7 @@ function Thing(def, parent)
 	}
 	t.addThing = function(name, defCustom)
 	{
-		var thing = genThing(name, t, defCustom);
+		var thing = genThing(name, defCustom, t);
 		t.things.push(thing);
 		return thing;
 	}
@@ -288,6 +288,20 @@ function Thing(def, parent)
 
 		//out( t.name.toUpperCase()+' says: '+msg );
 	}
+	t.emit = function(name, def)
+	{
+		if (notDef(def) && name && isStr(name.name)) {
+			def = name;
+			name = def.name;
+		}
+		def = defined(def, {});
+
+		def.x = defined(def.x, t.pos.x);
+		def.y = defined(def.y, t.pos.y);
+
+		// globally added object to map
+		newThing(name, def);
+	}
 	t.getLookingAngle = function()
 	{
 		var eyeAng = t.partDo('looking.getLookingAngle');
@@ -324,15 +338,7 @@ function Thing(def, parent)
 	// collision detection
 	t.isColliding = function()
 	{
-		for (var i=0; i < g_arrThings.length; i++)
-		{
-			if (t.collidesWith( g_arrThings[i] ))
-				return true;
-		}
-	}
-	t.collidesWith = function(a)
-	{
-		return doCirclesIntersect(t.pos, t.radius, a.pos, a.radius);
+		return isCollision(t.pos, t.radius);
 	}
 
 	t.getBox2dBody = function()
@@ -340,99 +346,24 @@ function Thing(def, parent)
 		if (t.body) return t.body.body;
 	}
 
-
 	init();
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-/////////////////////////////////////////////////////////////////////
-
-
-
-/*
-var thingsDef =
+function isCollision(pos, r)
 {
-	'tree': {
-		'circle':		{ clr: green, radius: 2 },
-		'body':			{ density: 2 },
-		'anchor':	{ frequency: 1, damping: 0, position: v2(0, 0) },
-	}
-
-	'human': {
-		'circle':		{ clr: skin, radius: 0.8 },
-		'body':			{ density: 1 },
-		'movement':		{ acceleration: 1, damping: 6 },
-		'heading':		{  }
-		'eyes':			{ angle: 120, distance: 10 },
-	}
-
-	'animal': {
-		'circle':		{ clr: green, radius: 2 },
-		'body':			{ density: 2 },
-		'movement':		{ acceleration: 1, damping: 6 },
-		'anchor':	{ frequency: 1, damping: 0, position: v2(0, 0) },
-	}
-	'eyes':
+	for (var i=0; i < g_arrThings.length; i++)
 	{
-		// ma byt toto tu? alebo v classe toho objektu? ??
-		'circle':		{ clr: 'grey', radius: 0.05 },
+		var a = g_arrThings[i];
+		var b = doCirclesIntersect(pos, r, a.pos, a.radius);
+		if (b)
+			return true;
 	}
-};
-
-player.action('up');
-
-asi by som si mal spisat co robim s things
-a podla toho pri kazdom prikaze si zadefinovat ako by to v novom systeme prebiehalo
-
-vytvorim new Thing('tree')
-vytvori sa pure Thing iba s nazvom tree
-a zacnu sa donho po jednom doplnat objekty
-vytvori sa circle, ktory sa prida do parts, a svoj sprite do sprite
-vytvori sa body, ktory hodi svoj body do globalneho box2d
-a vytvori sa anchor, ktory si z parenta vytiahne/vypyta body a anchorne sa
-a je vytvoreny objekt
-v update sa zobere pozicia z body, a nastavi sa na "tree"??
-pozicia z tree sa afterUpdate nastavi na circle
-
-na vsetko co maju parts by mal byt interface v thing?
-
-	setColor
-	setRadius
-	getRadius - zatial akoze fyzika je vzdy len taka ista
-	draw -> circle.draw
-	setPos
-	getPos
-	addPos: setPos(getPos+add)
-	update -> each.update
-	afterUpdate
-	beforeUpdate
-	action/control('up'/'dn'/..) - toto by chcelo nejaku ai,
-		take zakladne moze byt aj vo thing, ze to len tym hybe
-		a v body bude potom vylepsene, ze to aj ide tym smerom..
-
-	ai bude mat v update volaku vec co bude robit, a malo by nejak ovladat "move" resp. "controllery" (lol)
-
-otazka je vlastne len ze aky interface to ma mat a ako sa ma rozisorvat interface
-
-
-ALEBO sa na to cele vyjebat, a upravovat a oddelovat veci tak aby to zostavalo pojazdne z funkcnej verzie..
-a ujasnit si co vlastne chcem
-
-*/
+}
 
 
 
 
-////////////////////////////////////////////////////////////////
-// name, parts
+
+
+
+

@@ -2,23 +2,41 @@
 function getDefPosition(def)
 {
 	var r = def.parentRadius;
-	if (!r) r = 0;
+	r = defined(r, 1);
 
-	if (def.pos == 'rnd')	def.pos = v2rnd(0.66);
-	if (def.x == 'rnd')		def.x = rnd11(0.66);
-	if (def.y == 'rnd')		def.y = rnd11(0.66);
-
-	var x = defined(def.x, 0);
-	var y = defined(def.y, 0);
-	var v = defined(def.pos, v2(x, y));
+	var v = {x:def.x, y:def.y};
+	if (def.rnd)
+	{
+		v = findFreeSpace(def.radius);
+	}
+	else
+	{
+		if (v.x == 'rnd')		v.x = rnd11(0.66);
+		if (v.y == 'rnd')		v.y = rnd11(0.66);
+		v.x = defined(v.x, 0);
+		v.y = defined(v.y, 0);
+	}
 
 	v2multMe(v, r);
 	return v;
 }
 
-function randomPointOnMap()
+function findFreeSpace(r)
 {
-	return v2rndxy(20, 10);
+	r = r || 1;
+
+	var m = 3 / g_ivankRatio * 0.6;
+	var w = m * g_ikStage.stageWidth;
+	var h = m * g_ikStage.stageHeight;
+
+	var v = v2null();
+	tryDo(function()
+	{
+		v = v2rndxy(w, h);
+		return !isCollision(v, r);
+	});
+
+	return v;
 }
 
 
