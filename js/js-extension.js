@@ -12,7 +12,7 @@ function assert()
 	else
 	for (var i=0; i < last; i++)
 	{
-		if (typeof args[i] == 'undefined')
+		if (!args[i])
 			console.log('Assert Failed: '+msg);
 	}
 }
@@ -66,6 +66,12 @@ function tryDo(fn, nMax)
 	nMax = defined(nMax, 100);
 	while (!fn() && nMax-- > 0);
 }
+
+function assertNum(x, msg) { assert(isNum(x), 'notNum: '+msg?msg:''); }
+function assertStr(x, msg) { assert(isStr(x), 'notStr: '+msg?msg:''); }
+function assertObj(x, msg) { assert(isObj(x), 'notObj: '+msg?msg:''); }
+function assertArr(x, msg) { assert(isArr(x), 'notArr: '+msg?msg:''); }
+
 
 //////////////////////////////////////////////////////
 

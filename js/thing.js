@@ -87,6 +87,14 @@ function Thing(def, parent)
 
 	t.update = function()
 	{
+		if (!t.parent)
+		{
+			var b = g_cam.circleVisible(t.pos, t.radius);
+			t.sprite.visible = !!b;
+			if (!b)
+				return;
+		}
+
 		eachPart(function(i,p) { p.bUpdate = true; });
 
 		if (t.body)		t.body.update();
@@ -208,6 +216,13 @@ function Thing(def, parent)
 	{
 		if (!t.circle) return;
 		t.circle.setColor(c);
+	}
+
+	t.setRadius = function(r)
+	{
+		t.radius = r;
+		if (!t.circle) return;
+		t.circle.setRadius(r);
 	}
 
 	// get by name

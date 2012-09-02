@@ -105,12 +105,21 @@ function cycleIn(f, from, to)
 {
 	var range = to-from;
 
-	// (-1000)-(-180)> || (1000-180)
-	if (f-from > -range*100 || f-to > range*100)
+	var i = 0;
+	while (f < from && i>99)
+	{
+		f += range;
+		i++;
+	}
+	while (f > to && i<99)
+	{
+		f -= range;
+		i++;
+	}
+
+	if (i>=99)
 		assert(0, 'uneffective cycling');
 
-	while (f < from)	f += range;
-	while (f > to)		f -= range;
 	return f;
 }
 
@@ -469,6 +478,10 @@ function v2ok(v)
 {
 	return v && !isNaN(v.x) && !isNaN(v.y);
 }
+function assertV2(v, msg)
+{
+	assert(v2ok(v), 'assert v2: '+msg?msg:'');
+}
 
 function v2(x, y)		{ return {x:x,			y:y}; }
 function v2c(v)			{ return {x:v.x,		y:v.y}; }
@@ -597,6 +610,27 @@ function v2normMe(v)
 }
 
 
+function v2minmax(v, fMin, fMax)
+{
+	v = v2c(v);
+	var d = v2len(v);
+	if (d < fMin) v2multMe(v, fMin/d);
+	if (d > fMax) v2multMe(v, fMax/d);
+	return v;
+}
+
+function v2keepNearby(v, nearV, minDist, maxDist)
+{
+	v = v2sub(v, nearV);
+	v = v2minmax(v, minDist, maxDist);
+	return v2add(v, nearV);
+}
+
+function v2towards(a, b, len)
+{
+	var v = v2dir(a, b, len);
+	return v2add(v, a);
+}
 
 ///////////////////////////////
 // box2d vector

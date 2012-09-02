@@ -35,14 +35,6 @@ for each combination if both active, then mult activity
 		obziera vsetko		- food -> eat
 		boji sa noveho		- new stuff -> be skeptic
 
-	# do veci chcem pridavat vselijake featury
-		chodenie
-		nutricie+jedenie
-		utocenie
-		zivot a zomieranie
-		pohyblivost/chodenie
-		mozno ked zacnem robit to ai, tak sa v tom vysomarim
-
 	# chcem
 		# preco to chcem je podstatne
 			niektore veci sa daju spravit, ale aby bavilo ich robit, musia mat nejaky zmysel v hlbsom svete, takze tu budu veci, ktorym postupne nachadzam zmysel, a ked uz budu domyslene, tak sa mozu vytvorit
@@ -59,20 +51,39 @@ for each combination if both active, then mult activity
 		#polovanie	- kvoli kozi, lebo mi je zima
 					- lebo vlci ohrozuju nieco moje (rodinu, ovce)
 
+	# vymysliet dalsiu viziu
+		teraz tu mam len nudne veci co staci nakodit
+		a megakomplexne ai
+		treba nieco medzi tym..
+			napriklad nejake prekazky: skaly, do ktorych sa bude dat kopat
+			alebo drevene koly, z vyrubanych stromov
+			inventar?
+			motyle by to ozivili
+			skusit spravit rastliny cez terajsiu ai? ze proste bude nejak rast rastlina
+			a mat plodne obdobia, atd? vypadavat semiacka by mohli
+				vlastne stromy by mali rast, a ked vyrastie cely proceduralny les
+				tak ho potom ulozim do jsonu, a budem pouzivat ako zaciatocny
+				a aspon sa vyhnem algoritmickemu rozlozeniu
+				aale treba im dat aj challenge a pozitiva, aby to simulovalo realitu
+			zatial by sa mohlo dat s equiped kamenom trieskat do stromu, aby ho odtalo
+			a potom by tam zostal len kmen, a z tych by sa dali stavat ohrady
+			viacere zeleniny, nech si mozem postavat zahradu
+			teoreticky more dokola, nech sa obmedzi priestranstvo
+				ale to ked uz budem robit polygonove proto-urovne
+				tak by to chcelo aj zelen/kamene, atd
+			dat ai viac zivota, aby sa zgrupovavali, a nebodaj aj parili
+			nech je les ako zivy, tj ked uz tam nieco je, tak to tam fakt zije
+				a vacsinou samozrejme nic nie je, len mravce, motyle, zelen..
+
+
+
+
 # ======================================================
 # VIZIE - tu su uz ujasnene veci, kam chcem ist zhruba,
 # tj, tu nejde o priority, toto su len ujasnene predstavy do jasnych vizii
 
 	# pripravit ai/mozog/neurony/asociacie/podmienky/automata
 		tu si to treba jasne rozkecat, ze o co by islo
-
-	# actions:
-		bite/punch	- being.click
-		eat			- meat.click
-		grab/hold	- mouse_hold (strom, deer, rock, wolf, grass)
-						grass by mal mat anchor tym padom, aby sa dal urvat
-						a vlastne aj stromy by mali mat anchor
-		throw		- mouse_release + distance
 
 	# ked bude ai
 		nutrition ai
@@ -90,8 +101,6 @@ for each combination if both active, then mult activity
 		collisions - something touched you
 		footprints - intensity (degrades with distance)
 
-	# pridat travu
-
 	# overload attributes:
 		things.premenne sa pretazuju, treba to domysliet aj pre parts.premenne
 		wolf:
@@ -103,16 +112,15 @@ for each combination if both active, then mult activity
 # CO CHCEM SPRAVIT - sem to prepadne, ked je uz jasne co treba nakodit..
 # a ked je to prioritne (a fascinuje ma to, a neunavuje ma to)
 
-	# dvihnut, polozit, hodit kamen
-		damage trafenej husy co zagaga
+	# hodeny kamen -> box2d collision -> damage
 
-	# punch spravit na smer mysi
-		v pripade ze by clovek nieco drzal, tak to bude hodene do takej dialky
-		teda obmedzene silou cloveka - vacsi kamen doleti menej,
-		velky balvan to len mykne, srnka to iste, velky strom ani nehne
-		aj damage podla toho.. teoreticky by to mohlo byt..
-		robene nejakym fyziciacim objektom, ktory vyleti z postavy
+	# asi spravit, ze hadzanie bude vyzerat, ze to drzi v ruke, tj vedla tela..
 
+	# pozicia mysi pri kliknuti sa snapne na okolie v ktorom sa da interagovat
+		cize bude stacit kliknut smerom k niecomu, aby sa nieco dialo..
+
+	# pridat mravce, budu pomaly obzierat rastliny
+		a nebude ich vidiet, len po prizoomovani, inak cierne bodky
 
 # ===========================================================
 # NOTE FOR FUTURE: dost dobre mi fungovalo premiesnit kod tam kam patri

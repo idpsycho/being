@@ -16,6 +16,7 @@ function Camera()
 	var t		= this;
 	t.pos		= v2(0, 0);		// centered on screen
 	t.zoom		= 1;
+	t.zoomWanted = 1;
 	t.lockedOn	= null;	// object with (.pos, or .x .y) inside
 	t.w			= 800;	// screen width
 	t.h			= 480;	// and height
@@ -27,6 +28,10 @@ function Camera()
 	}
 	t.updateWorld = function(ikWorld)
 	{
+		t.leapZoom();
+
+		t.calcAabb();
+
 		t.updateLocking();
 
 		ikWorld.scaleX = t.zoom;
@@ -75,6 +80,12 @@ function Camera()
 		var v = v2add(t.pos, vTowards)
 		t.setPos( v, 1 );
 	}
+	t.leapZoom = function()
+	{
+		var add = (t.zoomWanted - t.zoom) * 0.1;
+		assertNum(add, 'leapZoom')
+		t.zoom += add;
+	}
 	t.setPos = function(v, dontUnlock)
 	{
 		t.pos = v2copy(v);
@@ -94,9 +105,10 @@ function Camera()
 	}
 	t.lockTo = function(obj){ t.lockedOn = obj; }
 	t.unlock = function()	{ t.lockedOn = null; }
-	t.setZoom = function(f)	{ t.zoom = f; }
-	t.zoomIn = function(f)	{ if (!f) f=5; f=1+f/60; t.setZoom(t.zoom * f); }
-	t.zoomOut = function(f)	{ if (!f) f=5; f=1+f/60; t.setZoom(t.zoom / f); }
+	//t.setZoom = function(f)	{ t.zoom = f; }
+	t.setZoom = function(f)	{ t.zoomWanted = f; }
+	t.zoomIn = function(f)	{ if (!f) f=10; f=1+f/60; t.setZoom(t.zoomWanted * f); }
+	t.zoomOut = function(f)	{ if (!f) f=10; f=1+f/60; t.setZoom(t.zoomWanted / f); }
 	t.zoomWheel = function(d) { d>0 ? t.zoomIn() : t.zoomOut(); }
 
 	t.screenDrag = function(scrPixels)
@@ -105,8 +117,58 @@ function Camera()
 		t.move(v);
 	}
 
+	t.calcAabb = function(reserveRatio)
+	{
+		var w = g_ikStage.stageWidth;
+		var h = g_ikStage.stageHeight;
+		var mn = t.fromScreen(0, 0);
+		var mx = t.fromScreen(w, h);
+
+		t.aabb = {mn:mn, mx:mx};
+
+		scaleAabb(t.aabb, reserveRatio);
+
+		return t.aabb;
+	}
+	t.metersToPixels = function(m)
+	{
+		return m * t.zoom * g_ivankRatio;
+	}
+
+	t.circleVisible = function(pos, radius)
+	{
+		if (!t.aabb) return true;
+		if (t.metersToPixels(radius*2) < 3)
+			return;
+
+		var r = radius;
+		var x = pos.x;
+		var y = pos.y;
+		var mx = t.aabb.mx;
+		var mn = t.aabb.mn;
+
+		if (x-r > mx.x) return;
+		if (y-r > mx.y) return;
+
+		if (x+r < mn.x) return;
+		if (y+r < mn.y) return;
+
+		return true;
+	}
 }
 
+function scaleAabb(aabb, ratio)
+{
+	ratio = defined(ratio, 1);
+	if (ratio == 1)
+		return;
+
+	var vR = v2sub(aabb.mx, aabb.mn);
+	v2multMe(vR, ratio);
+
+	v2subMe(aabb.mn, vR);
+	v2addMe(aabb.mx, vR);
+}
 /*
 
 function getScreenAABB(reserveRatio)

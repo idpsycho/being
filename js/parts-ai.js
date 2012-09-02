@@ -429,7 +429,36 @@ function PartSeeing(def, thing)
 }
 
 
-function QueryCircleNearest(pos, radius, ignoreThing)
+function checkIgnore(t, ignoreThing)
+{
+	if (isArr(ignoreThing))
+		return ignoreThing.contains(t.name);
+	else
+		return t == ignoreThing;
+}
+
+function QueryThingNearest(pos, radius, ignoreThing)
+{
+	var nearest;
+	for (var i=0; i < g_arrThings.length; i++)
+	{
+		var t = g_arrThings[i];
+		if (checkIgnore(t, ignoreThing))
+			continue;
+
+		if (!v2isCloserThan(t.pos, pos, t.radius+radius))
+			continue;
+
+		nearest = defined(nearest, t);
+		var d1 = v2dist(pos, nearest.pos) - nearest.radius;
+		var d2 = v2dist(pos, t.pos) - t.radius;
+		if (d2 < d1)
+			nearest = t;
+	}
+	return nearest;
+}
+
+function QueryBodyNearest(pos, radius, ignoreThing)
 {
 	var circle = createCircleShape(pos, radius);
 
@@ -524,7 +553,7 @@ function PartLooking(def, thing)
 	{
 		var spd = thing.getSpeed();
 		var turnTow = (spd > 1.5 || spd < 0.01);
-		t.lookAt(mousePos, true, 0);
+		t.lookAt(mousePos, true, g_held);
 	}
 	t.lookAt = function(o, turnToSee, turnTowards)
 	{

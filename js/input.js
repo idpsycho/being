@@ -7,6 +7,8 @@ require([
 var mouseScrNew, mousePosNew;
 var mouseScr, mouseScrLast, mouseScrChange;
 var mousePos, mousePosLast, mousePosChange;
+var mouseDownFor = 0;	// time elapsed from last MOUSE_DOWN to MOUSE_UP
+var mouseDownSince = 0;
 
 var keysEvent;		// keydown or keyup
 var keysDown;		// keydown (no keyup yet)		// eg. SHIFT=running
@@ -56,6 +58,9 @@ function inputAfterFrame()
 
 	mouseScrChange = v2sub(mouseScr, mouseScrLast);
 	mousePosChange = v2sub(mousePos, mousePosLast);
+
+	// mouse button
+	mouseDownFor = time() - mouseDownSince;
 }
 
 
@@ -80,19 +85,18 @@ function inputAfterFrame()
 //		MOUSE
 //
 
+function kClick()		{ return kr('MOUSE'); }
 function kd(c)			{ return keyDown(c); }
 function kp(c)			{ return keyPressed(c); }
+function kr(c)			{ return keyReleased(c); }
 function keyDown(c)
 {
 	var k = c.split(',');	// if (keyDown('UP,W'))
 	if (k.length > 1)
 	{
 		for (var i=0; i < k.length; i++)
-		{
-			var c = k[i];
-			if (keysDown[c])
-				return true;
-		}
+			if (keyDown(k[i])) return true;
+
 		return false;
 	}
 
@@ -104,15 +108,25 @@ function keyPressed(c)
 	if (k.length > 1)
 	{
 		for (var i=0; i < k.length; i++)
-		{
-			var c = k[i];
-			if (keysDown[c] && keysEvent[c])
-				return true;
-		}
+			if (keyPressed(k[i])) return true;
+
 		return false;
 	}
 
 	return keysDown[c] && keysEvent[c];
+}
+function keyReleased(c)
+{
+	var k = c.split(',');
+	if (k.length > 1)
+	{
+		for (var i=0; i < k.length; i++)
+			if (keyReleased(k[i])) return true;
+
+		return false;
+	}
+
+	return !keysDown[c] && keysEvent[c];
 }
 
 
@@ -151,11 +165,14 @@ function onMouseDown(e)
 {
 	keysDown['MOUSE'] = true;
 	keysEvent['MOUSE'] = true;
+	mouseDownSince = time();
+	mouseDownFor = 0;
 }
 function onMouseUp()
 {
 	keysDown['MOUSE'] = false;
 	keysEvent['MOUSE'] = true;
+	mouseDownFor = time() - mouseDownSince;
 }
 
 function onMouseMove(e)

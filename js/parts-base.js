@@ -25,7 +25,7 @@ function findFreeSpace(r)
 {
 	r = r || 1;
 
-	var m = 3 / g_ivankRatio * 0.6;
+	var m = 3 / g_ivankRatio * 1.0;
 	var w = m * g_ikStage.stageWidth;
 	var h = m * g_ikStage.stageHeight;
 
@@ -55,7 +55,7 @@ function findFreeSpace(r)
 
 function PartCircle(def, thing)
 {
-	assert(def.clr, thing, 'Circle init');
+	assert(isDef(def.clr), thing, 'Circle init');
 	var t = this;
 	t.name = 'circle';
 	t.thing = thing;
@@ -100,6 +100,15 @@ function PartCircle(def, thing)
 		if (clr == def.clr) return;
 		def.clr = clr;
 
+		t.redrawSprite();
+	}
+	t.setRadius = function(r)
+	{
+		var ratio = def.radius/r;
+		if (ratio > 0.95 && ratio < 1.05)
+			return;
+
+		def.radius = r;
 		t.redrawSprite();
 	}
 	t.setAlpha = function(a01)
@@ -154,7 +163,7 @@ function PartBody(def, thing)	// def: radius, density
 
 	function init()
 	{
-		t.body = createBox2dCircle(def.radius, def.density, def.damping);
+		t.body = createBox2dCircle(def.radius, def.density, def.damping, def.bullet);
 		t.body.SetUserData(t);
 	}
 
@@ -172,19 +181,40 @@ function PartBody(def, thing)	// def: radius, density
 	t.posChanged = function(v, r)
 	{
 		if (isDef(v))
+		{
+			assertV2(v, 'setPos');
 			t.body.SetPosition( b2v(v) );
+		}
 
 		if (isDef(r))
+		{
+			assertNum(r, 'setAng');
 			t.body.SetAngle( r*inRads );
+		}
 	}
 
 	t.remove = function()
 	{
 		g_box2d.DestroyBody(t.body)
 	}
+
+	t.impulse = function(v, f)
+	{
+		if (!t.body) return;
+		f = defined(f, 1);
+		v2multMe(v, f);
+		assertV2(v, 'impulse');
+		t.body.ApplyImpulse(b2v(v), t.body.GetPosition());
+	}
+	t.setDamping = function(f)
+	{
+		if (!t.body) return;
+		assertNum(f, 'damping');
+		t.body.SetLinearDamping(f);
+	}
 	////////////////////////////////////////////////////////////
 
-	function createBox2dCircle(radius, density, damping)
+	function createBox2dCircle(radius, density, damping, bullet)
 	{
 		assert(radius, density, 'createbox2dcircle problem');
 
@@ -211,7 +241,8 @@ function PartBody(def, thing)	// def: radius, density
 		body.CreateFixture(fixDef);
 		body.SetLinearDamping( damping );
 		body.SetAngularDamping( damping );
-		//body.SetAngle( rnd(360)*inRads );
+		if (bullet)
+			body.SetBullet( Box2D.Dynamics.b2Body.e_bulletFlag );
 
 		return body;
 	}

@@ -43,9 +43,10 @@ function loadWorld(s)
 	g_cam.lockTo(g_player);
 
 	g_wolf = newThingN(1, 'wolf');
-	newThingN(5, 'deer');
-	newThingN(60, 'tree');
-	//newThingN(20, 'rock');
+	newThingN(3, 'deer');
+	newThingN(160, 'tree');
+	newThingN(190, 'rock');
+	newThingN(330, 'grass');
 }
 function newThingN(n, name, def)
 {
@@ -78,7 +79,7 @@ function drawDebugTexts()
 {
 	// draw fps into corner
 	var fps = calcAvgFps(g_dt);
-	//gui.drawText(fps, 0, 0);
+	gui.drawText(fps, 0, 0);
 
 	var sw = g_ikStage.stageWidth;
 	var sh = g_ikStage.stageHeight;
@@ -223,37 +224,116 @@ function drawPlayerGui()
 //		g_player.drawStats('gui');
 }
 
+function objectsNear(a, b, ratio)
+{
+	if (!a || !b) return false;
+
+	ratio = defined(ratio, 3);
+	var minDist = (a.radius + b.radius) * ratio;
+	return v2isCloserThan(a.pos, b.pos, minDist);
+}
+
+var mouseIgnore = ['human', 'blood', 'footprint'];
+var g_held;
+
+function processHover()
+{
+	var pl = g_player;
+
+	var h = QueryThingNearest(mousePos, 1, mouseIgnore);
+
+	if (h && kd('C'))			g_cam.lockTo(h);
+	if (h && pl && !g_held)
+	{
+		var tooFar = (v2dist(pl.pos, h.pos) - h.radius > pl.radius*2);
+		if (!tooFar)
+			dbg.drawText(h.name, h.pos.x, h.pos.y, 'fff', 18);
+	}
+
+	if (h && h.name!='grass')	h.drawStats();
+	if (!pl) return;
+
+	var mxPwr = 3;
+	var pwr = mouseDownFor/1000 * mxPwr/1.5;
+	pwr = minmax(pwr, 0, mxPwr);
+	if (pwr < 1) pwr *= pwr;
+
+	if (g_held)
+		heldDrag();			// DRAG
+
+	if (!g_held && kClick() && objectsNear(h, pl) && mouseDownFor < 300)
+		heldGrab(h);		// GRAB
+	else
+	if (g_held && kClick())	// THROW
+		heldThrow(pwr);
+
+	function heldGrab(h)
+	{
+		if (!h || h == pl) return;
+		g_held = h;
+	}
+	function heldDrag()
+	{
+		var fMin = 1.0 * (pl.radius+g_held.radius);
+		var fMax = 2.0 * fMin;
+		if (kd('MOUSE')) {
+			fMax = rangeConvert(pwr, 0, mxPwr, fMax, fMin);
+			fMin = fMax;
+		}
+
+		var pos = v2keepNearby(mousePos, pl.pos, fMin, fMax);
+
+		var hand = v2dir(pl.pos, mousePos, pl.radius);
+		dbg.drawLinePP(g_held.pos, v2add(pl.pos, hand), 'fff', 2);
+		heldPull(pos);
+	}
+	function heldPull(pos)
+	{
+		if (g_held.getBox2dBody())
+		{
+			g_held.partDo('body.impulse', v2sub(pos, g_held.pos));
+			g_held.partDo('body.setDamping', 15);
+		}
+		else
+			g_held.setPos(pos);
+	}
+	function heldThrow(power)
+	{
+		var v = v2dir(pl.pos, mousePos);
+		g_held.partDo('body.impulse', v, power);
+
+		function addDragAfter(obj, t) {
+			setTimeout(function() {
+				obj.partDo('body.setDamping', 5);
+			}, t);
+		}
+		addDragAfter(g_held, 300);
+
+		g_held.partDo('body.setDamping', 0);
+		g_held = null;
+	}
+}
+
 function processInputs()
 {
 	////////////////////////////////////////////////////
 	// mouse
 
-	var hovered = QueryCircleNearest(mousePos);
-	if (hovered)
+	processHover();
+
+	var obj = QueryThingNearest(mousePos, 1, mouseIgnore);
+	if (obj && g_player && kd('MOUSE') && mouseDownFor > 300)
 	{
-		hovered.drawStats();
-		if (kd('C'))
-			g_cam.lockTo(hovered);
+		if (objectsNear(obj, g_player))
+			g_player.partDo('nutrition.bite', obj, 10/60);
 	}
+
 	if (g_cam.lockedOn)
 		g_cam.lockedOn.drawStats('gui');
 
 	if (kd('SPACE'))
 		g_cam.screenDrag(mouseScrChange);
 
-	if (g_player)
-	{
-		if (kp('MOUSE'))
-		{
-			var obj = QueryCircleNearest(mousePos, 0.1, g_player);
-			if (obj)
-			{
-				var maxDist = obj.radius + g_player.radius;
-				if (v2isCloserThan(obj.pos, g_player.pos, maxDist*1.2))
-					g_player.partDo('nutrition.bite', obj);
-			}
-		}
-	}
 
 	////////////////////////////////////////////////////
 	// keyboard
@@ -373,6 +453,6 @@ function onRESIZE()
 	g_cam.onRESIZE(w, h);
 
 	ikBg.graphics.clear();
-	ikBg.graphics.beginFill(0x6dae42);
+	ikBg.graphics.beginFill(0x887744);
 	ikBg.graphics.drawRect(0, 0, w, h);
 }

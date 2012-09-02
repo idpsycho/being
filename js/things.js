@@ -73,19 +73,31 @@ var arrThingsDef =
 	// NON-CONSCIOUS
 	{
 		name:		'tree',
-		radius:		[0.3, 2],
+		radius:		[0.6, 2],
 		parts: [
-			{ name: 'circle', clr: 0x327b0e },
+			{ name: 'circle', clr: 0x3b5f29, clrOld: 0x327b0e },
 			{ name: 'body', density: 2, damping: 5, radius: 0.6 },
 			{ name: 'anchor', freq: 1.5 },
 		],
 	},
 	{
-		name:		'rock',
-		radius:		[0.08, 0.12],
+		name:		'grass',
+		layer:		'ground',
+		radius:		[0.08, 0.2],
 		parts: [
-			{ name: 'circle', clr: 0xccccbb, layer: 'ground' },
-			{ name: 'body', density: 5, damping: 5,  },
+			{ name: 'circle', clr: 0x76c251, clrOld: 0x6ddf35 },
+			{ name: 'health', max: 40, shrink: true },
+			// { name: 'body', density: 0.3, damping: 15 },
+			// { name: 'anchor', freq: 3 },
+		],
+	},
+	{
+		name:		'rock',
+		radius:		[0.1, 0.12],
+		layer:		'ground',
+		parts: [
+			{ name: 'circle', clr: 0xccccbb },
+			{ name: 'body', density: 5, damping: 5, bullet: true },
 		],
 	},
 
@@ -138,25 +150,6 @@ var arrThingsDef =
 		x:			0.4,
 		parts: [
 			{ name: 'circle', clr: 0x000000 },
-		],
-	},
-
-	{
-		name:		'wolf-eyes',
-		things: [
-			{ name: 'wolf-eye', y: -0.25 },
-			{ name: 'wolf-eye', y: 0.25 },
-		],
-	},
-	{
-		name:		'wolf-eye',
-		radius:		0.15,
-		x:			0.7,
-		parts: [
-			{ name: 'circle', clr: 0xd2b071 },
-		],
-		things: [
-			{ name: 'eye-inner', radius: 0.4 },
 		],
 	},
 ];

@@ -165,7 +165,7 @@ function PartNutrition(def, thing)
 	t.now = 50;
 
 	t.burnIdle = 0.1/60;
-	t.burnActive = 0.8/60;
+	t.burnActive = 0.4/60;
 
 	t.getClr = function()
 	{
@@ -197,9 +197,12 @@ function PartNutrition(def, thing)
 		return minmax(f, 0, 1);
 	}
 
-	t.bite = function(meat)
+	t.bite = function(food, amount)
 	{
-		var eaten = meat.partDo('health.bitten', rnd(20, 30), thing);
+		amount = defined(amount, rnd(20, 30));
+
+		var eaten = food.partDo('health.bitten', amount, thing);
+		if (notDef(eaten)) return 0;
 		return t.add(eaten);
 	}
 }
@@ -227,11 +230,11 @@ function PartHealth(def, thing)
 	t.thing = thing;
 	t.clr = 0xaa0000;
 
-	t.max = 100;
-	t.now = 100;
+	t.max = defined(def.max, 100);
+	t.now = t.max;
 	t.smooth = t.now;
 
-	t.healIdle = 0;//0.1/60;
+	t.healIdle = 2/60;
 	t.nextBleed = 0;
 
 	t.getClr = function()
@@ -242,23 +245,34 @@ function PartHealth(def, thing)
 
 	t.update = function()
 	{
-		t.add( t.healIdle );
+		var f01 = t.get01();
+		if (t.now > 0)
+		{
+			var fNutr = thing.partDo('nutrition.get01');
+			if (fNutr)
+				t.add( t.healIdle*fNutr );
+		}
 
-		if (!'SHOW HEALTH')
-			dbg.drawText( to_i(t.get01()*100), thing.pos.x, thing.pos.y+0.5);
-
-		// this should return the same value, but be smoothly animated
 		t.smooth += (t.now - t.smooth) * 0.3;
 
-		var f = rangeConvert( t.get01(), 0.5, 0, 3, 0.4 );
-		if (f)
-			t.bleedEvery( f*1000 );
+		if (!def.shrink)
+		{
+			var f = rangeConvert( t.get01(), 0.5, 0, 3, 0.4 );
+			if (f) t.bleedEvery( f*1000 );
 
-		var f01 = t.get01();
-		if (f01>0)
-			thing.thingDo('eye.setColor', lerpClr('f00', 'fff', f01));
-		else
-			thing.thingDo('eye.setColor', 0);
+			if (f01>0)	thing.thingDo('eye.setColor', lerpClr('f00', 'fff', f01));
+			else		thing.thingDo('eye.setColor', 0);
+		}
+
+		if (def.shrink)
+		{
+			t.origRadius = defined(t.origRadius, thing.radius);
+			var r = f01 * t.origRadius;
+			if (r > 0.05)
+				thing.setRadius(r);
+			else
+				thing.remove();
+		}
 	}
 	t.bleedEvery = function(ms)
 	{
@@ -286,9 +300,12 @@ function PartHealth(def, thing)
 
 		if (!attacker) attacker = thing;
 
-		thing.emit('blood');
-		thing.partDo('ai.addEvent', 'bitten',
-			{dir: v2dirAng(thing.pos, attacker.pos)});
+		if (!def.shrink)
+		{
+			t.bleedEvery(100);
+			thing.partDo('ai.addEvent', 'bitten',
+				{dir: v2dirAng(thing.pos, attacker.pos)});
+		}
 
 		return dmg;
 	}

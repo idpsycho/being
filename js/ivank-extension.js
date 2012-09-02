@@ -54,9 +54,13 @@ function DebugLayer(stage, applyRatio)
 			dbgStage.removeChildAt(0);
 	}
 
-	t.drawLineV = function(v, v2, clr, w)
+	t.drawLinePP = function(p, p2, clr, w)
 	{
-		t.drawLine(v.x, v.y, v2.x, v2.y, clr, w);
+		t.drawLine(p.x, p.y, p2.x, p2.y, clr, w);
+	}
+	t.drawLinePV = function(p, v, clr, w)
+	{
+		t.drawLine(p.x, p.y, p.x+v.x, p.y+v.y, clr, w);
 	}
 	t.drawLine = function(x, y, x2, y2, clr, w) // We Have to Draw the Line Somewhere
 	{
