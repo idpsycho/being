@@ -65,7 +65,7 @@ var arrThingsDef =
 			{ name: 'looking', eyeMax: 15 },
 		],
 		things: [
-			{ name: 'wolf-eyes' },
+			{ name: 'eyes' },
 		]
 	},
 

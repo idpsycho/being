@@ -204,6 +204,12 @@ function Thing(def, parent)
 		return val == x;
 	}
 
+	t.setColor = function(c)
+	{
+		if (!t.circle) return;
+		t.circle.setColor(c);
+	}
+
 	// get by name
 	t.getPart = function(names, searchSubthings)
 	{
@@ -271,13 +277,17 @@ function Thing(def, parent)
 		t.rot = r;
 		if (t.body)		t.body.posChanged(pos, r);
 	}
-	t.move = function(v, spd)
+	t.move = function(v, spd, dontTurnByVelocity)
 	{
-		if (t.control)	t.control.move(v, spd);
+		if (!t.control) return;
+
+		t.control.move(v, spd, dontTurnByVelocity);
 	}
 	t.turn = function(degs, spd)
 	{
-		if (t.control)	t.control.turn(degs, spd);
+		if (!t.control) return;
+
+		t.control.turn(degs, spd);
 	}
 	t.say = function(msg)
 	{
@@ -334,6 +344,51 @@ function Thing(def, parent)
 		th.remove();
 	}
 	///////////////////////////////////////////////////
+
+	t.drawStats = function(bGui)
+	{
+		if (bGui) {
+			t.drawBarGui(t.health);
+			t.drawBarGui(t.nutrition, 1);
+		} else {
+			t.drawBar(t.health);
+			t.drawBar(t.nutrition, 1);
+		}
+	}
+	t.drawBar = function(part, order)
+	{
+		if (!part || !part.get01 || !part.thing) return;
+		order = defined(order, 0);
+		var f01 = part.get01('smooth');
+		var th = part.thing;
+
+		var r = th.radius;
+		var w = r*2;
+		var h = r/10;
+		var b = r/50;
+		var x = th.pos.x - r;
+		var y = th.pos.y - r - h*2;
+		y -= order*(h*2);
+
+		dbg.drawBarBordered(x, y, w, h, part.getClr(), b, f01);
+	}
+	t.drawBarGui = function(part, order)
+	{
+		if (!part || !part.get01 || !part.thing) return;
+		order = defined(order, 0);
+		var f01 = part.get01('smooth');
+
+		var sw = g_ikStage.stageWidth;
+		var sh = g_ikStage.stageHeight;
+		var w = sw*0.2;
+		var h = sh*0.02;
+		var x = sw - w*1.2;
+		var y = sh - h*2;
+		y -= order*(h*2);
+
+		gui.drawBarBordered(x, y, w, h, part.getClr(), 2, f01);
+	}
+
 
 	// collision detection
 	t.isColliding = function()

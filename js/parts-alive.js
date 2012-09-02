@@ -62,6 +62,7 @@ function PartControl(def, thing)
 	}
 	t.updateDirection = function(b)
 	{
+		t.turnTo = cycleIn180(t.turnTo);
 		if (!b)
 		{
 			thing.setRot( t.turnTo );
@@ -69,8 +70,10 @@ function PartControl(def, thing)
 		else
 		{
 			var ang = b.GetAngle()*inDegs;
+			ang = cycleIn180(ang);
+
 			var diff = t.turnTo - ang;
-			diff = cycleIn(diff, -180, 180);
+			diff = cycleIn180(diff);
 
 			diff *= 0.2;
 			diff = absmin(diff, t.maxRot);
@@ -96,17 +99,28 @@ function PartControl(def, thing)
 
 	t.turn = function(degs, spd)
 	{
+		degs = cycleIn180(degs);
 		t.turnTo = degs;
 
 		if (spd) t.rotSpeed = spd;
 	}
 
-	t.move = function(v, bFast)
+	t.turnByVelocity = function()
 	{
+		var v = thing.getVel();
+		if (v2len(v) > 0.1)
+			thing.turn( v2angle(v) );
+	}
+
+	t.move = function(v, bRun, dontTurnByVelocity)
+	{
+		if (!dontTurnByVelocity)
+			t.turnByVelocity();
+
 		if (!t.moveBy)
 			t.moveBy = v2null();
 
-		t.wantSpeed = bFast ? t.runSpeed : t.walkSpeed;
+		t.wantSpeed = bRun ? t.runSpeed : t.walkSpeed;
 
 		if (typeof v == 'string')
 		{
@@ -144,12 +158,19 @@ function PartNutrition(def, thing)
 	var t=this;
 	t.name = 'nutrition';
 	t.thing = thing;
+	t.clr = 0xc26d31;
 
-	t.max = 100;
+	var pi_r2 = 3.14 * pow(thing.radius, 2);
+	t.max = 100 * pi_r2;
 	t.now = 50;
 
 	t.burnIdle = 0.1/60;
 	t.burnActive = 0.8/60;
+
+	t.getClr = function()
+	{
+		return lerpClr('930', t.clr, t.get01());
+	}
 
 	t.update = function()
 	{
@@ -160,14 +181,26 @@ function PartNutrition(def, thing)
 		if (t.now <= 0)
 			thing.partDo('health.sub', 1/60);
 	}
-	t.eat = function(amount)
+	t.sub = function(f) { return t.set(t.now-f); }
+	t.add = function(f) { return t.set(t.now+f); }
+	t.set = function(f)
 	{
-		t.now -= amount;
+		var bef = t.now;
+
+		t.now = minmax(f, 0, t.max);
+
+		return bef-t.now;
 	}
 	t.get01 = function()
 	{
 		var f = rangeUnit(t.now, t.max);
 		return minmax(f, 0, 1);
+	}
+
+	t.bite = function(meat)
+	{
+		var eaten = meat.partDo('health.bitten', rnd(20, 30), thing);
+		return t.add(eaten);
 	}
 }
 
@@ -192,6 +225,7 @@ function PartHealth(def, thing)
 	var t=this;
 	t.name = 'health';
 	t.thing = thing;
+	t.clr = 0xaa0000;
 
 	t.max = 100;
 	t.now = 100;
@@ -199,6 +233,12 @@ function PartHealth(def, thing)
 
 	t.healIdle = 0;//0.1/60;
 	t.nextBleed = 0;
+
+	t.getClr = function()
+	{
+		var c = lerpClr('f00', '0f0', t.get01());
+		return saturateClr(c);
+	}
 
 	t.update = function()
 	{
@@ -213,6 +253,12 @@ function PartHealth(def, thing)
 		var f = rangeConvert( t.get01(), 0.5, 0, 3, 0.4 );
 		if (f)
 			t.bleedEvery( f*1000 );
+
+		var f01 = t.get01();
+		if (f01>0)
+			thing.thingDo('eye.setColor', lerpClr('f00', 'fff', f01));
+		else
+			thing.thingDo('eye.setColor', 0);
 	}
 	t.bleedEvery = function(ms)
 	{
@@ -224,27 +270,27 @@ function PartHealth(def, thing)
 		// randomly half up/down
 		t.nextBleed = time() + ms + rnd11(ms*0.8);
 	}
-	t.sub = function(f) { return t.add(-f); }
-	t.add = function(f)
-	{
-		t.set( t.now + f );
-	}
+	t.sub = function(f) { return t.set(t.now-f); }
+	t.add = function(f) { return t.set(t.now+f); }
 	t.set = function(f)
 	{
+		var bef = t.now;
+
 		t.now = minmax(f, 0, t.max);
+
+		return bef-t.now;
 	}
 	t.bitten = function(f, attacker)
 	{
-		t.sub(f);
+		var dmg = t.sub(f);
 
-		if (!attacker)
-			attacker = thing;
+		if (!attacker) attacker = thing;
 
-		var ratio = abRatio(thing.radius*0.5, attacker.radius);
-		var v = v2lerp(thing.pos, attacker.pos, ratio);
 		thing.emit('blood');
+		thing.partDo('ai.addEvent', 'bitten',
+			{dir: v2dirAng(thing.pos, attacker.pos)});
 
-		thing.partDo('ai.checkOut', attacker.pos);
+		return dmg;
 	}
 	t.dead = function() { return !t.get01(); }
 	t.get01 = function(bSmooth)

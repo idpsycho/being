@@ -4,12 +4,11 @@
 
 
 
-
-		//  ██    █
-		// █  █   █
-		// ████   █
-		// █  █   █
-		// █  █   █
+//		 ██    █
+//		█  █   █
+//		████   █
+//		█  █   █
+//		█  █   █
 
 function PartAi(def, thing)
 {
@@ -17,198 +16,255 @@ function PartAi(def, thing)
 	t.name = 'ai';
 	t.thing = thing;
 
-	t.prey = null;		// wolf sees: human or deer
-	t.danger = null;	// deer sees: human or wolf
-	t.lastDangerName = '';
+	t.lastActionChange = time();
+	t.biteTime = 0;
+	t.action = 'idle';
+	t.goal = v2null();
+	t.eventStack = [];
+
+	t.actions = ['idle', 'walk', 'run', 'check', 'dead'];
 
 	t.update = function()
 	{
-		if (thing.partDo('health.dead'))
+		if (thing.name == 'deer')
 		{
-			thing.eachThing('eye,wolf-eye', function(eye) {
-				eye.circle.setColor( 0 );
-			});
-			return;
+			on('idle afterSomeTime',	'walk goalRandom');
+			on('walk nearGoal',			'idle');
+			on('run nearGoal',			'check dirBehind');
+			on('bitten',				'check dirBehind');
+			on('seesDanger',			'run goalAwayFromDanger');
+			on('died',					'dead');
+		}
+		else
+		if (thing.name == 'wolf')
+		{
+			on('idle afterSomeTime',	'walk goalRandom');
+			on('walk nearGoal',			'idle');
+			on('seesPrey hungry',		'run goalPrey');
+			on('lostPrey hungry',		'run goalPreyLast');
+			on('run nearGoal biteTime',	'bite goalPrey');
+			on('bitten',				'check dirBehind');
+			on('died',					'dead');
 		}
 
-		if (thing.name == 'wolf')
-			t.updateWolf();
-		else
-			t.updateDeer();
+		updateAction();
+		//thing.say(t.action);
+
+		t.eventStack = [];
 	}
 
-	t.updateDeer = function()
+	function drawTo()
+	{
+		//dbg.drawLineV(thing.pos, t.goal, '00f', 5);
+	}
+
+	function getGoal()
+	{
+		var g = t.goal;
+		if (!g) return;
+
+		if (g.pos) return g.pos;
+		return g;
+	}
+	/////////////////////////////////////////////////////////
+	// actions
+	function walk()
+	{
+		var g = getGoal();
+		if (!g) return true;
+
+		thing.move( v2dir(thing.pos, g) );
+		drawTo();
+	}
+	function run()
+	{
+		var g = getGoal();
+		if (!g) return true;
+
+		thing.move( v2dir(thing.pos, g), true );
+		drawTo();
+	}
+	function check()
+	{
+		if (!t.dir) return true;
+		thing.turn( t.dir );
+		return angDiff(thing.rot, t.dir) < 5;
+	}
+	function bite()
+	{
+		if (!t.prey) return true;		// prey lost
+		if (!biteTime()) return true;	// cant bite faster
+
+		var eaten = thing.partDo('nutrition.bite', t.prey);
+		t.biteTime = time();
+		if (!eaten) return true;	// eaten all of it OR full stomach
+	}
+
+	/////////////////////////////////////////////
+	// modifiers
+	function goalRandom()
+	{
+		t.goal = v2add(thing.pos, v2rnd(5));
+	}
+	function goalPrey()
+	{
+		t.goal = t.prey;
+	}
+	function goalPreyLast()
+	{
+		t.goal = t.preyLast.pos;
+	}
+	function dirBehind()
+	{
+		t.dir = cycleIn180(thing.rot + 180);
+	}
+	function goalAwayFromDanger()
+	{
+		var a = v2dirAng(t.danger.pos, thing.pos) + rnd11(45);
+		t.goal = v2add(thing.pos, v2fromAngle(a, 5));
+	}
+
+	function getNearDist()
+	{
+		var d = thing.radius;
+		var target = (t.goal && t.goal.pos) ? t.goal : thing;
+
+		d += target.radius;
+		d *= 1.2;
+		return d;
+	}
+
+	/////////////////////////////////////////////
+	// events
+	function nearGoal()
+	{
+		var g = getGoal();
+		var dist = getNearDist();
+		if (!g || !dist) return;
+
+		return v2dist(thing.pos, g) < dist;
+	}
+	function afterSomeTime()
+	{
+		return ago(t.lastActionChange) > 1000;
+	}
+	function biteTime()
+	{
+		return ago(t.biteTime) > 500;
+	}
+	function seesDanger()
 	{
 		t.danger = thing.partDo('seeing.getSeenFirst', 'human,wolf');
-		if (t.danger)
-			t.lastDangerName = t.danger.name;
-
-		if (t.danger || t.fleeing)
-		{
-			if (t.danger)
-			{
-				var away = v2dirTo(t.danger.pos, thing.pos);
-				away = v2rot(away, rnd11(10));
-				v2multMe(away, 10);
-				t.to = v2add(thing.pos, away);
-			}
-
-			t.flee(t.to, true);
-
-			//thing.say('fleeing');
-		}
-		else
-		if (t.checkPos)
-		{
-			//thing.say('checking');
-			t.checkOut();
-		}
-		else
-		{
-			t.walkAround();
-		}
+		return t.danger;
 	}
-	t.checkOut = function(pos)
+	function seesPrey()
 	{
-		if (isV2(pos))
-		{
-			t.checkPos = pos;
-			//thing.say( nice('checkout: ', pos) );
-		}
-
-		//if (!t.checkPos)
-		//	return;
-
-		// if (t.isNear(t.checkPos))
-		// {
-		// 	t.checkPos = false;
-		// 	return;
-		// }
-
-		//t.walkAround(t.checkPos);
-		thing.partDo('looking.lookAt', t.checkPos, true);
-	}
-	t.flee = function()
-	{
-		if (!t.to || t.isNear(t.to))
-			t.fleeing = false;
-		else
-		{
-			t.checkPos = false;
-			t.fleeing = true;
-
-			t.moveTowards(t.to, 'run');
-			t.turnByVelocity();
-
-			var p = thing.pos;
-			if (t.lastDangerName)
-				thing.say('Watch out, '+t.lastDangerName.toUpperCase()+'!');
-		}
-	}
-	t.isNear = function(p, dist)
-	{
-		dist = defined(dist, 0);
-		dist += thing.radius*1.1;
-		return v2isCloserThan(thing.pos, p, dist);
-	}
-	t.isFar = function(p, dist)
-	{
-		dist = defined(dist, 0);
-		dist += thing.radius*1.1;
-		return v2isFurtherThan(thing.pos, p, dist);
-	}
-	t.walkAround = function(to, bFast)
-	{
-		if (!t.to || t.isNear(t.to))
-			t.to = findFreeSpace();
-
-		if (to)
-			t.to = isDef(to.pos) ? to.pos : to;
-
-		t.turnByVelocity();
-		t.moveTowards( t.to, bFast );
-	}
-	t.updateHunt = function()
-	{
-		if (!t.prey) {
-			t.setHunt(false);
-			return;
-		}
-
-		var to = t.prey.pos;
-		t.turnByVelocity();
-		t.moveTowards( to, 'fast' );
-
-		if (t.isNear(t.prey.pos, t.prey.radius))
-		{
-			t.prey.partDo('health.bitten', rnd(10, 20), thing);
-			t.setHunt(false);
-		}
-	}
-
-	t.moveTowards = function(v, bFast)
-	{
-		thing.move( v2dirTo(thing.pos, v), bFast );
-	}
-
-	t.turnByVelocity = function()
-	{
-		var v = thing.getVel();
-		if (v2len(v) > 0.1)
-			thing.turn( v2angle(v) );
-	}
-
-	t.updateWolf = function()
-	{
+		t.preyLast = t.prey;
 		t.prey = thing.partDo('seeing.getSeenFirst', 'human,deer');
-
-		if (t.prey)
-			thing.say('I see you, '+t.prey.name.toUpperCase()+'!');
-
-		thing.eachThing('wolf-eye', function(eye) {
-			eye.circle.setColor( !t.prey ? 0xd2b071 : 'f11' );
-		});
-
-		thing.partDo('looking.lookAt', t.prey, 'turnToSee');
-
-		if (t.hunt)
-		{
-			t.updateHunt();
-
-			if (!t.prey || t.isFar(t.prey.pos, 6.5))
-				t.setHunt(false);
-		}
-		else
-		{
-			var walk = true;
-			if (t.prey)
-			{
-				if (t.isNear(t.prey.pos, 6))
-					return t.setHunt(true);
-			}
-
-			if (walk)
-				t.walkAround(t.prey);
-		}
+		return t.prey;
 	}
-
-	t.setHunt = function(b)
+	function lostPrey()
 	{
-		if (t.stoppedHunting && ago(t.stoppedHunting) < 800)
-			return;
-
-		t.hunt = b;
-		if (!b)
-			t.stoppedHunting = time();
-
-		// t.thing.eachThing('wolf-eye', function(eye) {
-		// 	eye.circle.setColor( !b ? 0xd2b071 : 'f11' );
-		// });
-		t.to = null;
+		return (t.preyLast && !t.prey);
 	}
+	function hungry()
+	{
+		return thing.partDo('nutrition.get01')<0.7;
+	}
+	function died()
+	{
+		if (t.action=='dead') return false;
+		return thing.partDo('health.dead');
+	}
+
+
+
+	/////////////////////////////////////////////////////////
+	// interface
+	t.addEvent = function(name, params)
+	{
+		var ev = defined(params, {});
+		ev.name = name;
+		t.eventStack.push(params);
+	}
+	function findEvent(name)
+	{
+		return t.eventStack.findByAttr('name', name);
+	}
+	function updateAction()
+	{
+		var fn = getFn(t.action);
+		if (!fn) return;
+
+		// if (true) finished
+		if (fn()) setAction('idle');
+	}
+	function isAction(s)
+	{
+		return t.action==s;
+	}
+	function setAction(s)
+	{
+		t.action = s;
+		t.lastActionChange = time();
+	}
+	function on(cond, action_mod)
+	{
+		cond = cond.split(' ');
+		for (var i = 0; i < cond.length; i++)
+		{
+			var c = cond[i];
+			if (!checkCondition( c ))
+				return;
+		};
+
+		// all conditions were met, set action and apply modifier
+		ai.stimul(cond, 'in');
+		processAction(action_mod);
+	}
+	function processAction(am)
+	{
+		var s = am.split(' ');
+		var action	= s[0];
+		var mod		= s[1];
+
+		ai.stimul(action+'_'+(mod?mod:''), 'out');
+
+		applyMod(mod);
+		setAction(action);
+	}
+	function applyMod(mod)
+	{
+		var fn = getFn(mod);
+		if (fn) fn();
+	}
+	function checkCondition(c)
+	{
+		if (t.actions.contains(c))
+			return c == t.action;
+
+		var fn = getFn(c);
+		if (fn)
+			return fn();
+
+		return findEvent(c);
+	}
+
+	var arrFns = {};
+	function getFn(f)
+	{
+		var fn = arrFns[f];
+		if (!fn)
+		{
+			fn = eval('typeof '+f+'=="function"');
+			if (fn) fn = eval(f);
+			else fn = null;
+			arrFns[f] = fn;
+		}
+		return fn;
+	}
+
 }
-
-
 
 
 
@@ -231,7 +287,7 @@ function PartSeeing(def, thing)
 
 	t.fov		= defined(def.fov, 100);
 	t.distance	= defined(def.distance, 10);
-	t.refreshEvery = defined(def.refreshEvery, 1000);
+	t.refreshEvery = defined(def.refreshEvery, 1000+rndi(50, 100));
 
 	t.lastRefresh = 0;
 	t.arrLast	= [];
@@ -497,7 +553,7 @@ function PartLooking(def, thing)
 		t.lastLookingAngle = a;
 
 		var diffAng = a - thing.rot;
-		diffAng = cycleIn(diffAng, -180, 180);
+		diffAng = cycleIn180(diffAng);
 
 		// par stupnov sa natocia oci, zvysok cela bytost
 		var eyeAng = absmin(diffAng, def.eyeMax);

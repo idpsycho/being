@@ -1,3 +1,20 @@
+# ======================================================
+# TMP
+
+# ako poriesit learning ai?
+	-> mozem skusit spravit pre kazdu kombinaciu neuronov (2, 3, 4)
+		ze sa budu automaticky vytvarat kombinacne neurony (mother-cells)
+		a potom si vypisat vysledky, teoreticky by malo vyjst,
+		ze idle_afterSomeTime -> 1.0 -> walk_goalRandom
+	-> ked budem mat poriesene hentake ucenie,
+		tak mozem zacat rozmyslat ze co dalej
+		tj, ako extrahovat premenne z toho co sa deje v hre
+
+for each combination if both active, then mult activity
+	and apply to neuronCombination(A,B)
+
+
+
 
 # ======================================================
 # DOJMY A PREDSTAVY - sem sa pise najprv, co ma napadlo ;)
@@ -73,13 +90,18 @@
 		collisions - something touched you
 		footprints - intensity (degrades with distance)
 
+	# pridat travu
 
+	# overload attributes:
+		things.premenne sa pretazuju, treba to domysliet aj pre parts.premenne
+		wolf:
+			eye, circle.clr=#wolfy-color
+		husky:
+			eye, inner.circle.clr = #blue
 
 # ==============================================================
 # CO CHCEM SPRAVIT - sem to prepadne, ked je uz jasne co treba nakodit..
 # a ked je to prioritne (a fascinuje ma to, a neunavuje ma to)
-
-	# pridat travu
 
 	# dvihnut, polozit, hodit kamen
 		damage trafenej husy co zagaga
@@ -90,14 +112,6 @@
 		velky balvan to len mykne, srnka to iste, velky strom ani nehne
 		aj damage podla toho.. teoreticky by to mohlo byt..
 		robene nejakym fyziciacim objektom, ktory vyleti z postavy
-
-	# overload attributes:
-		things.premenne sa pretazuju, treba to domysliet aj pre parts.premenne
-		wolf:
-			eye, circle.clr=#wolfy-color
-		husky:
-			eye, inner.circle.clr = #blue
-
 
 
 # ===========================================================

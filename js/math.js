@@ -49,6 +49,13 @@ function doCirclesIntersect(p1, r1, p2, r2)
 	return v2isCloserThan(p1, p2, r1+r2);
 }
 
+function betweenCircles(p1, r1, p2, r2)
+{
+	var ratio = abRatio(r1*0.5, r2);
+	var v = v2lerp(p1, p2, ratio);
+	return v;
+}
+
 
 
 ////////////////////////////////////////////////////////
@@ -93,6 +100,7 @@ function absmax(a, b) { return sign(a) * max( abs(a), abs(b) ); }
 function abspow(a, b) { return sign(a) * pow( abs(a), abs(b) ); }
 
 // useful to get smallest angle.. btw its not safe, while might take forever..
+function cycleIn180(f) { return cycleIn(f, -180, 180); }
 function cycleIn(f, from, to)
 {
 	var range = to-from;
@@ -104,6 +112,12 @@ function cycleIn(f, from, to)
 	while (f < from)	f += range;
 	while (f > to)		f -= range;
 	return f;
+}
+
+function angDiff(a, b)
+{
+	var d = cycleIn180(a-b)
+	return abs(d);
 }
 
 ////////////////////////////////////////////////////////
@@ -290,6 +304,128 @@ function normalizeClr(c)	// accepts hexa color: 'fff'
 	return c;
 }
 
+function HSLtoRGB(h,s,l)
+{
+	function h2v(hh,min,max)
+	{
+		hh = hh % 360;
+		if (hh <	0) hh = hh + 360;
+		if (hh <	60) return min + (max - min) * hh / 60;
+		if (hh >= 60 && hh < 180) return max;
+		if (hh >=180 && hh < 240) return min+(max-min)*(240-hh)/60;
+		return min;
+	}
+
+	r = g = b = 0;
+	if (s < 0) s = 0;
+	if (s > 1) s = 1;
+	if (l < 0) l = 0;
+	if (l > 1) l = 1;
+	h = h % 360;
+	if (h < 0) h = h + 360;
+	if (l <= 0.5)
+	{
+				cmin = l * ( 1 - s );
+				cmax = 2 * l - cmin;
+	}else{
+				cmax = l * ( 1 - s ) + s;
+				cmin = 2 * l - cmax;
+	}
+	r = h2v(h+120,cmin,cmax);
+	g = h2v(h,cmin,cmax);
+	b = h2v(h-120,cmin,cmax);
+
+	r = to_i255(r);
+	g = to_i255(g);
+	b = to_i255(b);
+
+	return {r:r, g:g, b:b};
+
+	return "rgb("+r+", "+g+", "+b+")";
+}
+
+function HSLtoInt(h, s, l)
+{
+	var c = HSLtoRGB(h, s, l);
+	return RGBtoInt(c.r, c.g, c.b);
+}
+
+function saturateClr(clr)
+{
+	var c = intToRGB255(clr);
+	var mx = max(c.r, c.g, c.b);
+	var x = 255/mx;
+	c.r *= x;
+	c.g *= x;
+	c.b *= x;
+	return RGB255toInt(c);
+}
+
+function lerpClr(c1, c2, f)
+{
+	f = minmax(f, 0, 1);
+	c1 = normalizeClr(c1);
+	c2 = normalizeClr(c2);
+
+	c1 = intToRGB255(c1);
+	c2 = intToRGB255(c2);
+
+	var c = lerpRGB(c1, c2, f);
+	return RGB255toInt(c);
+}
+function RGB255toInt(r, g, b)
+{
+	if (isObj(r) && isDef(r.r)) {
+		b = r.b;
+		g = r.g;
+		r = r.r;
+	}
+
+	r = fixed(minmax(r, 0, 255));
+	g = fixed(minmax(g, 0, 255));
+	b = fixed(minmax(b, 0, 255));
+
+	return (r*256*256) | (g*256) | b;
+}
+
+function isInt0255(x)
+{
+	if (x < 0 || x > 255) return false;
+	if (x != Math.ceil(x)) return false;
+	return true;
+}
+
+function intToRGB255(c)
+{
+	var r, g, b;
+	r = (c & 0x00ff0000) /256/256;
+	g = (c & 0x0000ff00) /256;
+	b = (c & 0x000000ff);
+	return {r:r, g:g, b:b}
+}
+
+function lerpRGB(c1, c2, f)
+{
+	var r, g, b;
+	r = lerp0255(c1.r, c2.r, f);
+	g = lerp0255(c1.g, c2.g, f);
+	b = lerp0255(c1.b, c2.b, f);
+	return {r:r, g:g, b:b};
+}
+
+function lerp0255(a, b, f)
+{
+	var c = a + (b-a)*f;
+	c = Math.ceil(c);
+	return minmax(c, 0, 255);
+}
+function p_clr(c)
+{
+	if (c && notDef(c.r))
+		return p_clr( intToRGB255(c) );
+
+	out('rgb: ', c.r, c.g, c.b);
+}
 
 ////////////////////////////////////////////////////////////////
 // 1. radians = degrees*inRads
@@ -352,7 +488,8 @@ function v2len(t)		{ return Math.sqrt(t.x*t.x + t.y*t.y); }
 function v2len2(t)		{ return t.x*t.x + t.y*t.y; }
 function v2dist(t, v)	{ var x=t.x-v.x, y=t.y-v.y; return Math.sqrt(x*x+y*y); }
 function v2dist2(t, v)	{ var x=t.x-v.x, y=t.y-v.y; return x*x+y*y; }
-function v2dirTo(t, v)	{ return v2norm(v2sub(v, t)); }
+function v2dir(t, v, f)	{ f=defined(f, 1); return v2m(v2norm(v2sub(v, t)), f); }
+function v2dirAng(t, v)	{ return v2angle(v2dir(t, v)); }
 function v2dot(t, v)	{ return t.x*v.x + t.y*v.y; }
 function v2p(t)			{ return t.x.toFixed(2)+' '+t.y.toFixed(2); }
 function v2null(v)		{ if (v) v.x=v.y=0; else return {x:0, y:0}; }
@@ -394,7 +531,7 @@ function v2angle(v)
 }
 function v2angle2(a, b)
 {
-	var v = v2dirTo(a, b);
+	var v = v2dir(a, b);
 	return Math.atan2(v.y, v.x) * inDegs;
 }
 function v2fromAngle(degs, dist)

@@ -62,18 +62,12 @@ function Camera()
 		}
 
 		var vC = getPos(t.lockedOn);
-
-		/*
-		var lookAng = t.lockedOn.getLookingAngle ?
-					t.lockedOn.getLookingAngle() : null;
-		if (lookAng)
-		{
-			var vLookAhead = v2fromAngle(lookAng, 2/t.zoom);
-			v2addMe(vC, vLookAhead);
+		if (t.lockedOn.getVel) {
+			//var ahead = v2m(t.lockedOn.getVel(), 0.1);
+			//v2addMe(vC, ahead);
 		}
-		*/
 
-		t.leapTo(vC, 0.05);
+		t.leapTo(vC, 0.07);
 	}
 	t.leapTo = function(v, f01)
 	{

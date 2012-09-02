@@ -1,9 +1,9 @@
 require([
 	// main libraries
-	'js/libs/ivank.js',
-	'js/libs/Box2d.js',
-	//'js/libs/Box2d.min.js',
-	'js/libs/jquery.js',
+	'js/libs/ivank',
+	'js/libs/Box2d',
+	//'js/libs/Box2d.min',
+	'js/libs/jquery',
 
 	// modules
 	'js/js-extension',
@@ -17,6 +17,7 @@ require([
 	'js/parts',
 	'js/thing',
 	'js/things',
+	'js/neurons',
 
 ], initBeing);
 
@@ -28,6 +29,7 @@ var g_box2d;
 var g_arrThings = [];
 var g_dt;
 var g_player;
+var g_wolf;
 var dbg;	// world-space debug
 var gui;	// screen-space debug
 var arrErrors = [];
@@ -40,14 +42,16 @@ function loadWorld(s)
 	g_player = newThing('human', {x:0,y:0});
 	g_cam.lockTo(g_player);
 
-	newThingN(4, 'deer');
-	newThingN(1, 'wolf');
-	newThingN(30, 'tree');
-	newThingN(20, 'rock');
+	g_wolf = newThingN(1, 'wolf');
+	newThingN(5, 'deer');
+	newThingN(60, 'tree');
+	//newThingN(20, 'rock');
 }
 function newThingN(n, name, def)
 {
-	while (n--) newThing(name, def);
+	var x;
+	while (n--) x=newThing(name, def);
+	return x;
 }
 function newThing(name, def)
 {
@@ -70,18 +74,82 @@ function newThing(name, def)
 		█  █   █      █  █   █  █   █  █
 		███    ████   ███    ████    ███
 */
-function drawNewDebugTexts()
+function drawDebugTexts()
 {
 	// draw fps into corner
 	var fps = calcAvgFps(g_dt);
 	//gui.drawText(fps, 0, 0);
-	//gui.drawText(nice(g_cam.pos, ':', g_cam.zoom), 0, 30);
 
-	//var p = g_player.pos;
-	//var vel = g_player.body.GetLinearVelocity();
-	//dbg.drawText(nice(vel), p.x, p.y);
+	var sw = g_ikStage.stageWidth;
+	var sh = g_ikStage.stageHeight;
 
-	//gui.drawText('n='+g_box2d.GetBodyCount()+' j='+g_box2d.GetJointCount()+' c='+g_box2d.GetContactCount());
+	if (0)
+	if (ai)
+	{
+
+		if (kd('1')) ai.stimul('1', 'in');
+		if (kd('2')) ai.stimul('2', 'in');
+		if (kd('3')) ai.stimul('3', 'in');
+		if (kd('4')) ai.stimul('4', 'in');
+		if (kd('5')) ai.stimul('5', 'out');
+		if (kd('6')) ai.stimul('6', 'out');
+		if (kd('7')) ai.stimul('7', 'out');
+
+		ai.learn();
+		//ai.work();
+
+		var w = sw/3;
+		var x = sw-w;
+
+		gui.drawRect(x, 0, w, sh, '222', 0.5);
+
+		var r = 30;
+		var arr, yStep;
+
+		function clrA(act) {
+			return lerpClr('fff', '0f0', act)
+		}
+
+		// inputs
+		arr = ai.getInputs();
+		yStep = 0.8 / arr.length;
+		$.each(arr, function(i, e)
+		{
+			e.x = x+w/3;
+			e.y = (0.1+i*yStep)*sh;
+			gui.drawCircle(e.x, e.y, r, clrA(e.activity));
+			gui.drawText(e.name, e.x, e.y-20);
+			gui.drawText(nice(e.activity), e.x, e.y);
+		});
+
+		// outputs
+		arr = ai.getOutputs();
+		yStep = 0.8 / arr.length;
+		$.each(arr, function(i, e)
+		{
+			e.x = x+w/3*2;
+			e.y = (0.1+i*yStep)*sh;
+			gui.drawCircle(e.x, e.y, r, clrA(e.activity));
+			gui.drawText(e.name, e.x, e.y-20);
+			gui.drawText(nice(e.activity), e.x, e.y);
+		});
+
+		// links
+		arr = ai.links;
+		$.each(arr, function(i, e)
+		{
+			if (e.nA.in || e.nA.out || e.nB.in || e.nB.out)
+			{
+				var wLine = 1+log10(e.weight*150);
+				var ctr = v2center(e.nA, e.nB);
+
+				gui.drawLineV(e.nA, e.nB, clrA(e.activity), wLine);
+				//gui.drawText( nice(e.weight), ctr.x, ctr.y );
+			}
+		});
+
+		ai.calm();
+	}
 }
 
 
@@ -120,7 +188,7 @@ function onEnterFrame()
 
 	dbg.onFrame();
 	gui.onFrame();
-	drawNewDebugTexts();
+	drawDebugTexts();
 
 	processInputs();
 
@@ -151,42 +219,24 @@ function drawConsoleErrors()
 
 function drawPlayerGui()
 {
-	if (!g_player) return;
-
-	var sw = g_ikStage.stageWidth;
-	var sh = g_ikStage.stageHeight;
-	var x = sw - sw*0.05;
-	var y = sh - sh*0.05;
-	var h = -20;
-
-	var nutr = g_player.getPart('nutrition')[0];
-	var hlth = g_player.getPart('health')[0];
-
-	drawBar(nutr, x, y+h*1.5, 0xc26d31);
-	drawBar(hlth, x, y, 0xaa0000);
-}
-
-function drawBar(bar, x, y, clr)
-{
-	if (!bar) return;
-	var f01 = bar;
-	if (typeof f01 == 'object')
-		f01 = f01.get01('smooth');
-
-	var sw = g_ikStage.stageWidth;
-	var sh = g_ikStage.stageHeight;
-	var b = 1; // border
-	var w = -sw*0.2;
-	var h = -20;
-
-	gui.drawRect(x+b, y+b, w-b*2, h-b*2, 0);
-	gui.drawRect(x, y, w*f01, h, clr);
+//	if (g_player)
+//		g_player.drawStats('gui');
 }
 
 function processInputs()
 {
 	////////////////////////////////////////////////////
 	// mouse
+
+	var hovered = QueryCircleNearest(mousePos);
+	if (hovered)
+	{
+		hovered.drawStats();
+		if (kd('C'))
+			g_cam.lockTo(hovered);
+	}
+	if (g_cam.lockedOn)
+		g_cam.lockedOn.drawStats('gui');
 
 	if (kd('SPACE'))
 		g_cam.screenDrag(mouseScrChange);
@@ -200,7 +250,7 @@ function processInputs()
 			{
 				var maxDist = obj.radius + g_player.radius;
 				if (v2isCloserThan(obj.pos, g_player.pos, maxDist*1.2))
-					obj.partDo('health.bitten', rnd(10, 20), g_player);
+					g_player.partDo('nutrition.bite', obj);
 			}
 		}
 	}

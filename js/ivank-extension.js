@@ -119,10 +119,34 @@ function DebugLayer(stage, applyRatio)
 		alpha = defined(alpha, 1);
 		clr = normalizeClr(clr);
 
+		x *= ivankRatio;
+		y *= ivankRatio;
+		w *= ivankRatio;
+		h *= ivankRatio;
+
 		g.beginFill(clr, alpha);
 		g.drawRect(x, y, w, h);
 	}
 
+	t.drawCircle = function(x, y, r, c, alpha)
+	{
+		alpha = alpha || 1;
+		c = normalizeClr(c);
+
+		x *= ivankRatio;
+		y *= ivankRatio;
+		r *= ivankRatio;
+
+		g.beginFill(c, alpha);
+		g.drawCircle(x, y, r);
+	}
+
+	t.drawBarBordered = function(x, y, w, h, clr, b, f01)
+	{
+		var bb = b*2;
+		t.drawRect(x-b, y-b, w+bb, h+bb, 0);
+		t.drawRect(x, y, w*f01, h, clr);
+	}
 
 	///////////////////////////////////
 	// debug drawing tools

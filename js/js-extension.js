@@ -56,15 +56,10 @@ function defined(value, default_value)
 	return value;
 }
 
-function isNum(x)
-{
-	return typeof x == 'number';
-}
-
-function isStr(x)
-{
-	return typeof x == 'string';
-}
+function isNum(x) { return typeof x == 'number'; }
+function isStr(x) { return typeof x == 'string'; }
+function isObj(x) { return typeof x == 'object'; }
+function isArr(x) { return (x instanceof Array); }
 
 function tryDo(fn, nMax)
 {
@@ -170,6 +165,11 @@ Array.prototype.sortByAttr = function(attr, reverse)
 	if (reverse)
 		this.reverse();
 }
+Array.prototype.contains = function(o)
+{
+	return this.indexOf(o) != -1;
+}
+
 
 /* TEST:
 var arr = [{i:0,w:5}, {i:1,w:1}, {i:2,w:2}]; hits=[0, 0, 0]; var q=99999; while(q--) hits[arr.weightedRnd().i]++; hits;
@@ -296,7 +296,7 @@ function nice(f)
 }
 
 
-function out()
+function niceOut()
 {
 	var s = '';
 	for (var i=0; i < arguments.length; i++)
@@ -317,9 +317,15 @@ function out()
 		else
 			s += nice(a)
 
-		s+=' ';
+		s+='\t';
 	}
-	console.log(s);
+	return s;
+}
+
+function out()
+{
+	var s = niceOut.apply(this, arguments);
+	console.log( s );
 }
 
 
